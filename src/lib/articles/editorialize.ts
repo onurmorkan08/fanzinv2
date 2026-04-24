@@ -22,6 +22,22 @@ function normalizeText(value: string) {
     .trim();
 }
 
+function unique(values: string[]) {
+  return [...new Set(values)];
+}
+
+function pickPhrase(values: string[], fallback: string) {
+  if (values.length === 0) {
+    return fallback;
+  }
+
+  if (values.length === 1) {
+    return values[0]!;
+  }
+
+  return `${values.slice(0, -1).join(", ")} and ${values.at(-1)}`;
+}
+
 export function detectEditorialTopic(
   text: string,
 ):
@@ -39,12 +55,10 @@ export function detectEditorialTopic(
 
   if (
     hasAny([
-      "g\u00f6zalt\u0131",
       "gozalti",
       "tutuklama",
       "operasyon",
       "emniyet",
-      "serbest b\u0131rak\u0131ld\u0131",
       "serbest birakildi",
     ])
   ) {
@@ -54,13 +68,10 @@ export function detectEditorialTopic(
   if (
     hasAny([
       "dava",
-      "soru\u015fturma",
       "sorusturma",
       "iddianame",
       "mahkeme",
-      "savc\u0131",
       "savci",
-      "yarg\u0131",
       "yargi",
       "fezleke",
       "ceza",
@@ -74,10 +85,8 @@ export function detectEditorialTopic(
     hasAny([
       "protesto",
       "eylem",
-      "y\u00fcr\u00fcy\u00fc\u015f",
       "yuruyus",
       "miting",
-      "polis m\u00fcdahalesi",
       "polis mudahalesi",
       "yasak",
       "meydan",
@@ -88,17 +97,12 @@ export function detectEditorialTopic(
 
   if (
     hasAny([
-      "bas\u0131n",
       "basin",
       "medya",
       "gazeteci",
-      "ifade \u00f6zg\u00fcrl\u00fc\u011f\u00fc",
       "ifade ozgurlugu",
-      "yay\u0131n",
       "yayin",
-      "sans\u00fcr",
       "sansur",
-      "eri\u015fim engeli",
       "erisim engeli",
     ])
   ) {
@@ -108,14 +112,11 @@ export function detectEditorialTopic(
   if (
     hasAny([
       "belediye",
-      "ba\u015fkan",
       "baskan",
-      "g\u00f6revden alma",
       "gorevden alma",
       "kayyum",
       "ihale",
       "belediye meclisi",
-      "yerel y\u00f6netim",
       "yerel yonetim",
     ])
   ) {
@@ -127,12 +128,9 @@ export function detectEditorialTopic(
       "chp",
       "muhalefet",
       "parti",
-      "siyasi bask\u0131",
       "siyasi baski",
       "aday",
-      "se\u00e7im",
       "secim",
-      "imamo\u011flu",
       "imamoglu",
     ])
   ) {
@@ -142,92 +140,167 @@ export function detectEditorialTopic(
   return "generic_political";
 }
 
-function detectFocus(normalized: string) {
-  if (normalized.includes("imamoglu")) {
-    return "Ekrem Imamoglu";
+function detectActors(normalized: string) {
+  const actors: string[] = [];
+
+  if (normalized.includes("imamoglu") || normalized.includes("ekrem")) {
+    actors.push("Ekrem Imamoglu");
   }
 
   if (normalized.includes("chp")) {
-    return "the CHP";
+    actors.push("the CHP");
   }
 
-  if (normalized.includes("gazeteci") || normalized.includes("medya")) {
-    return "journalists and media actors";
+  if (normalized.includes("muhalefet")) {
+    actors.push("opposition figures");
   }
 
-  if (normalized.includes("belediye") || normalized.includes("baskan")) {
-    return "local government actors";
+  if (normalized.includes("gazeteci")) {
+    actors.push("journalists");
   }
 
-  if (normalized.includes("protesto") || normalized.includes("eylem")) {
-    return "public demonstrators";
+  if (normalized.includes("medya")) {
+    actors.push("media outlets");
   }
 
-  return "opposition actors";
+  if (normalized.includes("belediye")) {
+    actors.push("municipal authorities");
+  }
+
+  if (normalized.includes("baskan")) {
+    actors.push("elected mayors");
+  }
+
+  if (normalized.includes("ogrenci")) {
+    actors.push("students");
+  }
+
+  if (normalized.includes("avukat")) {
+    actors.push("lawyers");
+  }
+
+  return unique(actors);
+}
+
+function detectInstitutions(normalized: string) {
+  const institutions: string[] = [];
+
+  if (normalized.includes("ibb") || normalized.includes("istanbul buyuksehir")) {
+    institutions.push("Istanbul metropolitan administration");
+  }
+
+  if (normalized.includes("belediye")) {
+    institutions.push("local government");
+  }
+
+  if (normalized.includes("mahkeme")) {
+    institutions.push("the courts");
+  }
+
+  if (normalized.includes("savci")) {
+    institutions.push("the prosecution");
+  }
+
+  if (normalized.includes("emniyet") || normalized.includes("polis")) {
+    institutions.push("police authorities");
+  }
+
+  if (normalized.includes("rtuk")) {
+    institutions.push("broadcast regulators");
+  }
+
+  return unique(institutions);
+}
+
+function detectLocations(normalized: string) {
+  const locations: string[] = [];
+
+  if (normalized.includes("istanbul")) {
+    locations.push("Istanbul");
+  }
+
+  if (normalized.includes("ankara")) {
+    locations.push("Ankara");
+  }
+
+  if (normalized.includes("izmir")) {
+    locations.push("Izmir");
+  }
+
+  if (normalized.includes("turkiye") || normalized.includes("turkiye")) {
+    locations.push("Turkey");
+  }
+
+  return unique(locations);
 }
 
 function buildSummaryDetails(
   topic: ReturnType<typeof detectEditorialTopic>,
   normalized: string,
 ) {
-  const focus = detectFocus(normalized);
+  const actors = detectActors(normalized);
+  const institutions = detectInstitutions(normalized);
+  const locations = detectLocations(normalized);
+  const actorPhrase = pickPhrase(actors, "opposition actors");
+  const institutionPhrase = pickPhrase(institutions, "state institutions");
+  const locationPhrase = locations.length > 0 ? ` in ${pickPhrase(locations, "Turkey")}` : "";
 
   switch (topic) {
     case "media_rights":
       return {
         title: "Media pressure case enters editorial review",
         headline: "MEDIA RIGHTS UNDER PRESSURE",
-        summary: `The extracted report points to pressure around media access, public communication, journalists, or freedom of expression. It appears to focus in particular on ${focus} and the public visibility of the wider political dispute.`,
+        summary: `${actorPhrase} appear in a report about media access, public communication, or freedom of expression${locationPhrase}. The article suggests that ${institutionPhrase} are shaping who can speak publicly and how the wider political dispute is being reported.`,
         context:
-          "This item is relevant because restrictions on media and expression can shape public understanding of the March 19 process and related political developments.",
+          "This item is relevant because pressure on journalists, publishers, and public communication can directly narrow civic visibility around the March 19 process.",
       };
     case "legal_pressure":
       return {
         title: "Legal pressure case moves into editorial review",
         headline: "LEGAL PRESSURE UNDER REVIEW",
-        summary: `The extracted report centers on legal scrutiny, court activity, investigation pressure, or prosecution-related developments involving opposition politics. It appears to focus on ${focus} through judicial procedure, prosecutorial pressure, or courtroom escalation.`,
+        summary: `${actorPhrase} are at the center of a report about court action, investigation pressure, or prosecution steps${locationPhrase}. The article points to a legal track shaped by ${institutionPhrase} rather than a routine administrative dispute.`,
         context:
-          "This item is relevant because judicial pressure and legal proceedings are central to the broader political process being monitored.",
+          "This item is relevant because investigations, indictments, and court proceedings are core indicators of political pressure in the monitored editorial frame.",
       };
     case "municipal_pressure":
       return {
         title: "Municipal pressure case enters editorial review",
         headline: "LOCAL DEMOCRACY UNDER PRESSURE",
-        summary: `The extracted report points to political pressure around local government, municipal authority, elected officials, or administrative intervention. It appears to focus on ${focus} through local institutional interference rather than routine service coverage.`,
+        summary: `${actorPhrase} appear in a report about municipal authority, elected office, or administrative intervention${locationPhrase}. The article suggests that ${institutionPhrase} are affecting local governance rather than covering ordinary service delivery.`,
         context:
-          "This item is relevant because pressure on elected local government is part of the wider democratic and institutional context.",
+          "This item is relevant because pressure on municipalities and elected local offices is part of the wider democratic and institutional risk landscape.",
       };
     case "protest_crackdown":
       return {
         title: "Protest pressure case enters editorial review",
         headline: "CIVIC ACTION UNDER PRESSURE",
-        summary: `The extracted report appears connected to public demonstrations, protest restrictions, police intervention, or civic reaction to political developments. It appears to focus on ${focus} within a story shaped by street response and assembly pressure.`,
+        summary: `${actorPhrase} appear in a report about demonstrations, assembly restrictions, or police intervention${locationPhrase}. The article suggests that ${institutionPhrase} are shaping how public reaction can be expressed in the street.`,
         context:
-          "This item is relevant because protest activity and restrictions on assembly are key indicators in the wider political environment.",
+          "This item is relevant because protest restrictions and assembly pressure are direct signals of civic rights strain in the broader political environment.",
       };
     case "detention_arrest":
       return {
         title: "Detention-related case enters editorial review",
         headline: "DETENTION PRESSURE UNDER REVIEW",
-        summary: `The extracted report points to detention, arrest, police operation, or custody-related developments connected to the political process. It appears to focus on ${focus} through escalation in police or prosecutorial action.`,
+        summary: `${actorPhrase} appear in a report about detention, arrest, or police operations${locationPhrase}. The article points to escalation through custody or enforcement activity linked to ${institutionPhrase}.`,
         context:
-          "This item is relevant because detention and arrest activity can indicate escalation in political and legal pressure.",
+          "This item is relevant because detention and arrest activity can mark a sharper phase of political or legal pressure inside the monitored process.",
       };
     case "opposition_pressure":
       return {
         title: "Opposition pressure case enters editorial review",
         headline: "OPPOSITION PRESSURE UNDER REVIEW",
-        summary: `The extracted report is connected to pressure on opposition figures, party activity, electoral politics, or public political participation. It appears to focus on ${focus} within a broader climate of political targeting and organizational pressure.`,
+        summary: `${actorPhrase} appear in a report about opposition politics, party activity, or electoral pressure${locationPhrase}. The article suggests that ${institutionPhrase} are shaping the political field around participation, candidacy, or party organization.`,
         context:
-          "This item is relevant because opposition pressure is one of the central editorial categories monitored by this panel.",
+          "This item is relevant because pressure on opposition actors remains one of the central editorial categories tracked by this panel.",
       };
     default:
       return {
         title: "Political pressure case enters editorial review",
         headline: "POLITICAL PRESSURE UNDER REVIEW",
-        summary: `The extracted report contains politically relevant signals connected to legal scrutiny, public rights, opposition activity, or institutional pressure. It appears to focus on ${focus} within the broader March 19 monitoring frame.`,
+        summary: `${actorPhrase} appear in a politically relevant report${locationPhrase}. The article points to pressure involving ${institutionPhrase} and fits the broader monitoring frame around legal scrutiny, civic rights, and opposition activity.`,
         context:
-          "This item is relevant to the wider March 19 editorial monitoring workflow.",
+          "This item remains relevant to the March 19 editorial workflow because it connects institutional pressure with the wider political monitoring frame.",
       };
   }
 }

@@ -40,6 +40,12 @@ function formatImageStatus(status: FinalStory["imageStatus"]) {
   return "Missing";
 }
 
+function storyStatusClasses(publishable: boolean) {
+  return publishable
+    ? "inline-flex items-center rounded-full border border-[#b9cfbf] bg-[#edf6ef] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#35543d]"
+    : "inline-flex items-center rounded-full border border-accent/20 bg-accent-soft px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent";
+}
+
 function StoryBadge({
   children,
   tone = "default",
@@ -319,9 +325,7 @@ export default function Home() {
           <div className="rounded-[32px] border border-border bg-panel-strong p-5 shadow-[0_12px_40px_rgba(72,50,33,0.06)] sm:p-6">
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-semibold tracking-tight">
-                  Aday Haberler
-                </h2>
+                <h2 className="text-2xl font-semibold tracking-tight">Aday Haberler</h2>
                 <p className="text-sm text-muted">
                   Unified output from the finalized V2 article pipeline.
                 </p>
@@ -351,9 +355,7 @@ export default function Home() {
           <div className="rounded-[32px] border border-border bg-panel-strong p-5 shadow-[0_12px_40px_rgba(72,50,33,0.06)] sm:p-6">
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-semibold tracking-tight">
-                  Seçilen Haberler
-                </h2>
+                <h2 className="text-2xl font-semibold tracking-tight">Seçilen Haberler</h2>
                 <p className="text-sm text-muted">
                   Stories staged for collage and single-story visual output.
                 </p>
@@ -386,32 +388,51 @@ export default function Home() {
               Kolaj ve tekil haber görselleri
             </h2>
             <p className="text-sm text-muted">
-              Homepage collage and single-story pages built only from final story fields.
+              Homepage collage and single-story pages built only from final English story fields.
             </p>
           </div>
 
           {collageFeed.length === 0 ? (
             <div className="rounded-[32px] border border-dashed border-border bg-panel p-8 text-sm text-muted">
-              Select stories to populate the homepage collage preview.
+              Seçilen haberler geldiğinde ana sayfa kolajı burada oluşur.
             </div>
           ) : (
             <div className="space-y-6">
               <article className="overflow-hidden rounded-[34px] border border-border bg-[#5b1816] shadow-[0_18px_44px_rgba(72,50,33,0.18)]">
+                <div className="border-b border-black/15 px-6 py-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/70">
+                        Homepage Collage
+                      </p>
+                      <p className="text-sm text-white/85">
+                        The first selected story leads the page and every other story appears as
+                        a visible front-page block with image and headline.
+                      </p>
+                    </div>
+                    <StoryBadge tone="muted">{collageFeed.length} stories</StoryBadge>
+                  </div>
+                </div>
+
                 <div className="grid gap-0 xl:grid-cols-[1.55fr_1fr]">
-                  <section className="relative min-h-[520px] overflow-hidden border-b border-black/20 xl:border-r xl:border-b-0">
+                  <section className="relative min-h-[560px] overflow-hidden border-b border-black/20 xl:border-r xl:border-b-0">
                     <SafeStoryImage
                       src={heroStory?.imageUrl || ""}
                       alt={heroStory?.visualHeadlineEN || "Editorial story image"}
                       className="absolute inset-0 h-full w-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,0.94)] via-[rgba(0,0,0,0.38)] to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,0.96)] via-[rgba(0,0,0,0.42)] to-transparent" />
                     <div className="absolute inset-x-0 bottom-0 space-y-4 p-8 text-white sm:p-10">
                       <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/75">
-                        MAIN COVER STORY
+                        Main Cover Story
                       </p>
                       <h3 className="max-w-3xl text-4xl font-semibold uppercase leading-[1.02] tracking-[0.08em] sm:text-5xl">
                         {heroStory?.visualHeadlineEN || "REVIEW REQUIRED"}
                       </h3>
+                      <p className="max-w-2xl text-sm leading-6 text-white/88 sm:text-base">
+                        {heroStory?.editorialSummaryEN ||
+                          "This story is awaiting approved English editorial output."}
+                      </p>
                     </div>
                   </section>
 
@@ -421,13 +442,7 @@ export default function Home() {
                         <span className="inline-flex items-center rounded-full border border-border bg-panel px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
                           {heroStory?.sourceName || "Editorial Source"}
                         </span>
-                        <span
-                          className={
-                            heroStory?.publishable
-                              ? "inline-flex items-center rounded-full border border-[#b9cfbf] bg-[#edf6ef] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#35543d]"
-                              : "inline-flex items-center rounded-full border border-accent/20 bg-accent-soft px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent"
-                          }
-                        >
+                        <span className={storyStatusClasses(Boolean(heroStory?.publishable))}>
                           {heroStory?.publishable ? "Ready" : "Needs Review"}
                         </span>
                       </div>
@@ -435,7 +450,7 @@ export default function Home() {
                         {heroStory?.editorialTitleEN || "Needs Review"}
                       </h4>
                       <p className="text-base leading-7 text-foreground/85">
-                        {heroStory?.editorialSummaryEN ||
+                        {heroStory?.editorialContextEN ||
                           "This story is awaiting approved English editorial output."}
                       </p>
                     </div>
@@ -446,8 +461,8 @@ export default function Home() {
                           key={story.id}
                           className="overflow-hidden rounded-[22px] border border-[#d8c9b6] bg-[#fff9f1]"
                         >
-                          <div className="grid grid-cols-[92px_1fr]">
-                            <div className="min-h-[104px]">
+                          <div className="grid grid-cols-[96px_1fr]">
+                            <div className="min-h-[112px] border-r border-[#d8c9b6]">
                               <SafeStoryImage
                                 src={story.imageUrl}
                                 alt={story.visualHeadlineEN || "Editorial story image"}
@@ -458,17 +473,11 @@ export default function Home() {
                               <p className="line-clamp-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
                                 {story.visualHeadlineEN || "REVIEW REQUIRED"}
                               </p>
-                              <h5 className="line-clamp-2 text-sm font-semibold text-foreground">
+                              <h5 className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">
                                 {story.editorialTitleEN || "Needs Review"}
                               </h5>
                               <p className="line-clamp-1 text-xs text-muted">{story.sourceName}</p>
-                              <span
-                                className={
-                                  story.publishable
-                                    ? "inline-flex items-center rounded-full border border-[#b9cfbf] bg-[#edf6ef] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#35543d]"
-                                    : "inline-flex items-center rounded-full border border-accent/20 bg-accent-soft px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent"
-                                }
-                              >
+                              <span className={storyStatusClasses(story.publishable)}>
                                 {story.publishable ? "Ready" : "Needs Review"}
                               </span>
                             </div>
@@ -477,6 +486,56 @@ export default function Home() {
                       ))}
                     </div>
                   </section>
+                </div>
+
+                <div className="border-t border-black/15 bg-[#6a1d19] p-5">
+                  <div className="mb-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
+                      Front Page Story Strip
+                    </p>
+                    <p className="text-sm text-white/85">
+                      Every homepage item below keeps a visible image, headline, and short English
+                      deck in one collage surface.
+                    </p>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {collageFeed.map((story) => (
+                      <article
+                        key={`${story.id}-front-page`}
+                        className="overflow-hidden rounded-[24px] border border-white/15 bg-[#fff7eb]"
+                      >
+                        <div className="grid grid-cols-[120px_1fr]">
+                          <div className="min-h-[128px] border-r border-[#d8c9b6] bg-[#eaddcb]">
+                            <SafeStoryImage
+                              src={story.imageUrl}
+                              alt={story.visualHeadlineEN || "Editorial story image"}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                          <div className="space-y-2 p-4">
+                            <p className="line-clamp-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+                              {story.visualHeadlineEN || "REVIEW REQUIRED"}
+                            </p>
+                            <h5 className="line-clamp-2 text-base font-semibold leading-tight text-foreground">
+                              {story.editorialTitleEN || "Needs Review"}
+                            </h5>
+                            <p className="line-clamp-2 text-xs leading-5 text-muted">
+                              {story.editorialSummaryEN ||
+                                "This story is awaiting approved English editorial output."}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+                                {story.sourceName}
+                              </span>
+                              <span className={storyStatusClasses(story.publishable)}>
+                                {story.publishable ? "Ready" : "Needs Review"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
                 </div>
               </article>
 
@@ -528,6 +587,9 @@ export default function Home() {
                             {story.editorialContextEN ||
                               "This item is being held in the internal review queue."}
                           </p>
+                        </div>
+                        <div className="text-xs uppercase tracking-[0.18em] text-muted">
+                          {formatPublishedAt(story.publishedAt)}
                         </div>
                       </div>
                     </div>
