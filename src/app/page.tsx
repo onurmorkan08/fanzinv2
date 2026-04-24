@@ -715,42 +715,6 @@ export default function Home() {
                     </section>
                   </div>
 
-                  <div className="border-t border-black/15 bg-[#6a1d19] p-5">
-                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                      {collageFeed.map((story) => (
-                        <article
-                          key={`${story.id}-front-page`}
-                          className="overflow-hidden rounded-[24px] border border-white/15 bg-[#fff7eb]"
-                        >
-                          <div className="grid grid-cols-[124px_1fr]">
-                            <div className="min-h-[136px] border-r border-[#d8c9b6] bg-[#eaddcb]">
-                              <SafeStoryImage
-                                src={story.imageUrl}
-                                alt={story.editorialTitleEN || "Haber görseli"}
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                            <div className="space-y-2 p-4">
-                              <h5 className="line-clamp-2 text-base font-semibold leading-tight text-foreground">
-                                {story.editorialTitleEN || "İnceleme Gerekli"}
-                              </h5>
-                              <p className="line-clamp-3 text-xs leading-5 text-muted">
-                                {story.editorialSummaryEN || "Bu haber için görünür özet üretilemedi."}
-                              </p>
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-                                  {story.sourceName}
-                                </span>
-                                <span className={storyStatusClasses(story.publishable)}>
-                                  {story.publishable ? "Hazır" : "İnceleme Gerekli"}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                  </div>
                 </article>
               </div>
 
