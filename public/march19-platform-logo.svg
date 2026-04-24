@@ -1,0 +1,18 @@
+<svg width="600" height="600" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="600" height="600" fill="#FCF8F1"/>
+  <circle cx="300" cy="300" r="220" stroke="#D52720" stroke-width="34" fill="#FCF8F1"/>
+  <path d="M192 138C225 120 261 111 300 111C339 111 375 120 408 138" stroke="#D52720" stroke-width="20" stroke-linecap="round"/>
+  <path d="M221 463C245 474 272 480 300 480C328 480 355 474 379 463" stroke="#D52720" stroke-width="18" stroke-linecap="round"/>
+  <text x="300" y="133" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="24" fill="#FCF8F1" letter-spacing="4">MARCH 19 PLATFORM</text>
+  <text x="300" y="472" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="18" fill="#FCF8F1" letter-spacing="2.3">UNITED FOR DEMOCRACY IN TÜRKIYE</text>
+  <g transform="translate(300 315)">
+    <path d="M0 -105V20" stroke="#11131A" stroke-width="10" stroke-linecap="round"/>
+    <path d="M-100 -30L0 -40L100 -30" stroke="#11131A" stroke-width="8" stroke-linecap="round"/>
+    <path d="M0 -40C-12 -56 -21 -72 -26 -92M0 -40C12 -56 21 -72 26 -92M0 -40C0 -64 0 -83 0 -104" stroke="#11131A" stroke-width="8" stroke-linecap="round"/>
+    <path d="M-43 -101C-26 -88 -16 -72 -8 -55M43 -101C26 -88 16 -72 8 -55M-16 -118C-8 -104 -3 -90 0 -74M16 -118C8 -104 3 -90 0 -74" stroke="#11131A" stroke-width="8" stroke-linecap="round"/>
+    <path d="M-110 -28L-145 18H-75L-110 -28Z" fill="#11131A"/>
+    <path d="M110 -28L75 18H145L110 -28Z" fill="#11131A"/>
+    <path d="M0 20V120" stroke="#11131A" stroke-width="10" stroke-linecap="round"/>
+    <path d="M0 114C-21 127 -37 144 -48 165M0 114C21 127 37 144 48 165M0 123C-7 139 -12 154 -15 170M0 123C7 139 12 154 15 170M0 132C0 145 0 157 0 171M-28 122C-39 134 -46 145 -52 156M28 122C39 134 46 145 52 156" stroke="#11131A" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</svg>
