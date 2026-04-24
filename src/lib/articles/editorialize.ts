@@ -1,6 +1,6 @@
 import type { EditorialFields, RawArticle } from "./types";
 
-const MINIMUM_BODY_LENGTH = 80;
+const MINIMUM_EDITORIAL_BODY_LENGTH = 140;
 
 const failedEditorialFields: EditorialFields = {
   editorialTitleEN: "",
@@ -22,17 +22,7 @@ function normalizeText(value: string) {
     .trim();
 }
 
-export function editorializeArticle(article: RawArticle): EditorialFields {
-  const body = article.rawBodyTR.trim();
-
-  if (
-    article.extractionStatus === "failed" ||
-    !body ||
-    body.length <= MINIMUM_BODY_LENGTH
-  ) {
-    return failedEditorialFields;
-  }
-
+function buildDeterministicEditorialFields(article: RawArticle): EditorialFields {
   const normalized = normalizeText(`${article.rawTitleTR} ${article.rawBodyTR}`);
 
   let editorialTitleEN = "Political pressure case moves into editorial review";
@@ -42,19 +32,19 @@ export function editorializeArticle(article: RawArticle): EditorialFields {
     "This item is connected to the wider March 19 process, opposition pressure, legal scrutiny, or civic rights concerns.";
   let visualHeadlineEN = "POLITICAL PRESSURE UNDER REVIEW";
 
-  if (normalized.includes("basin ozgurlugu")) {
-    editorialTitleEN = "Press freedom case moves into editorial review";
+  if (normalized.includes("basin ozgurlugu") || normalized.includes("ifade ozgurlugu")) {
+    editorialTitleEN = "Expression rights case moves into editorial review";
     editorialSummaryEN =
-      "A politically relevant Turkish news item has been approved for the controlled English editorial workflow and prepared for publication review.";
+      "A politically relevant media and civic rights report has been approved for the controlled English editorial workflow and prepared for publication review.";
     editorialContextEN =
-      "This item is connected to press freedom, freedom of expression, or wider institutional pressure on public scrutiny.";
-    visualHeadlineEN = "PRESS FREEDOM UNDER REVIEW";
-  } else if (normalized.includes("protesto")) {
+      "This item is connected to freedom of expression, press freedom, or wider institutional pressure on public scrutiny.";
+    visualHeadlineEN = "EXPRESSION RIGHTS UNDER REVIEW";
+  } else if (normalized.includes("protesto") || normalized.includes("demokratik haklar")) {
     editorialTitleEN = "Civic rights case moves into editorial review";
     editorialSummaryEN =
-      "A politically relevant Turkish news item has been approved for the controlled English editorial workflow and prepared for publication review.";
+      "A politically relevant civic rights report has been approved for the controlled English editorial workflow and prepared for publication review.";
     editorialContextEN =
-      "This item is connected to protest restrictions, public assembly pressure, or wider civic rights concerns.";
+      "This item is connected to protest restrictions, democratic rights, or broader pressure on public participation.";
     visualHeadlineEN = "CIVIC RIGHTS UNDER REVIEW";
   } else if (
     normalized.includes("dava") ||
@@ -64,10 +54,18 @@ export function editorializeArticle(article: RawArticle): EditorialFields {
   ) {
     editorialTitleEN = "Legal pressure case moves into editorial review";
     editorialSummaryEN =
-      "A politically relevant Turkish news item has been approved for the controlled English editorial workflow and prepared for publication review.";
+      "A politically relevant legal pressure report has been approved for the controlled English editorial workflow and prepared for publication review.";
     editorialContextEN =
-      "This item is connected to the wider March 19 process, opposition pressure, legal scrutiny, or civic rights concerns.";
+      "This item is connected to investigations, court proceedings, judiciary pressure, or politically sensitive legal scrutiny.";
     visualHeadlineEN = "LEGAL PRESSURE UNDER REVIEW";
+  }
+
+  if (article.sourceType === "manual") {
+    editorialContextEN =
+      `${editorialContextEN} The source entered through manual intake and was normalized into the shared editorial pipeline.`;
+  } else {
+    editorialContextEN =
+      `${editorialContextEN} The source entered through automated intake and was normalized into the shared editorial pipeline.`;
   }
 
   return {
@@ -78,4 +76,22 @@ export function editorializeArticle(article: RawArticle): EditorialFields {
     translationStatus: "success",
     summaryStatus: "success",
   };
+}
+
+export async function editorializeArticle(article: RawArticle): Promise<EditorialFields> {
+  const body = article.rawBodyTR.trim();
+
+  if (
+    article.extractionStatus === "failed" ||
+    !body ||
+    body.length < MINIMUM_EDITORIAL_BODY_LENGTH
+  ) {
+    return failedEditorialFields;
+  }
+
+  const _llmConfigured = Boolean(
+    process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY?.trim(),
+  );
+
+  return buildDeterministicEditorialFields(article);
 }

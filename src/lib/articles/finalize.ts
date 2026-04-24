@@ -4,7 +4,33 @@ import { isPoliticallyRelevant } from "./relevance";
 import type { FinalStory, RawArticle } from "./types";
 import { validateFinalStory } from "./validation";
 
-export function finalizeArticle(article: RawArticle): FinalStory {
+export async function finalizeArticle(article: RawArticle): Promise<FinalStory> {
+  const resolvedImage = resolveArticleImage(article);
+
+  if (article.extractionStatus === "failed") {
+    return validateFinalStory({
+      id: article.id,
+      sourceType: article.sourceType,
+      sourceName: article.sourceName,
+      sourceUrl: article.sourceUrl,
+      publishedAt: article.publishedAt,
+      rawTitleTR: article.rawTitleTR,
+      rawBodyTR: article.rawBodyTR,
+      editorialTitleEN: "",
+      editorialSummaryEN: "",
+      editorialContextEN: "",
+      visualHeadlineEN: "",
+      imageUrl: resolvedImage.imageUrl,
+      imageStatus: resolvedImage.imageStatus,
+      extractionStatus: article.extractionStatus,
+      translationStatus: "failed",
+      summaryStatus: "failed",
+      publishable: false,
+      needsReview: true,
+      errorReason: article.errorReason,
+    });
+  }
+
   const relevance = isPoliticallyRelevant(article);
 
   if (!relevance.isRelevant) {
@@ -20,8 +46,8 @@ export function finalizeArticle(article: RawArticle): FinalStory {
       editorialSummaryEN: "",
       editorialContextEN: "",
       visualHeadlineEN: "",
-      imageUrl: article.rawImageUrl ?? "",
-      imageStatus: article.rawImageUrl ? "found" : "fallback",
+      imageUrl: resolvedImage.imageUrl,
+      imageStatus: resolvedImage.imageStatus,
       extractionStatus: article.extractionStatus,
       translationStatus: "failed",
       summaryStatus: "failed",
@@ -31,8 +57,7 @@ export function finalizeArticle(article: RawArticle): FinalStory {
     });
   }
 
-  const editorialFields = editorializeArticle(article);
-  const resolvedImage = resolveArticleImage(article);
+  const editorialFields = await editorializeArticle(article);
 
   return validateFinalStory({
     id: article.id,
@@ -52,9 +77,9 @@ export function finalizeArticle(article: RawArticle): FinalStory {
     translationStatus: editorialFields.translationStatus,
     summaryStatus: editorialFields.summaryStatus,
     publishable:
-      article.extractionStatus !== "failed" &&
       editorialFields.translationStatus === "success" &&
-      editorialFields.summaryStatus === "success",
+      editorialFields.summaryStatus === "success" &&
+      article.extractionStatus === "success",
     needsReview:
       article.extractionStatus !== "success" ||
       editorialFields.translationStatus !== "success" ||

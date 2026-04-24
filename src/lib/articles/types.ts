@@ -56,3 +56,10 @@ export type FinalStory = {
   needsReview: boolean;
   errorReason?: string;
 };
+
+export type SourceDefinition = {
+  name: string;
+  listingUrl: string;
+  articlePathHints?: string[];
+  excludePathHints?: string[];
+};

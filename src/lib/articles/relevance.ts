@@ -1,53 +1,49 @@
 import type { RawArticle } from "./types";
 
 const relevantKeywords = [
-  "imamoglu",
-  "imamoglu",
   "ekrem",
+  "imamoglu",
   "chp",
   "19 mart",
-  "dava",
+  "siyasi baski",
+  "muhalefet baskisi",
+  "muhalefet",
   "sorusturma",
   "gozalti",
   "tutuklama",
+  "dava",
   "mahkeme",
   "protesto",
   "yargi",
   "kayyum",
+  "ifade ozgurlugu",
   "basin ozgurlugu",
+  "demokratik haklar",
+  "belediye baskani",
+  "hukuki baski",
 ];
 
 const excludedKeywords = [
-  "football",
-  "basketball",
-  "futbol",
-  "basketbol",
   "spor",
   "sports",
-  "match",
-  "mac",
-  "galatasaray",
-  "fenerbahce",
-  "besiktas",
-  "lig",
-  "gol",
-  "kadro",
-  "antrenman",
-  "celebrity",
-  "magazine",
+  "futbol",
+  "football",
+  "basketbol",
+  "basketball",
   "magazin",
-  "lifestyle",
+  "celebrity",
   "yasam",
-  "belediye hizmet",
-  "altyapi",
-  "economy",
-  "ekonomi",
-  "inflation",
-  "culture",
-  "kultur",
+  "lifestyle",
+  "burc",
+  "horoscope",
   "sanat",
-  "art",
+  "culture",
   "festival",
+  "ekonomi",
+  "economy",
+  "enflasyon",
+  "altyapi",
+  "belediye hizmet",
 ];
 
 function normalizeText(value: string) {
@@ -66,7 +62,6 @@ export function isPoliticallyRelevant(article: RawArticle): {
   reason: string;
 } {
   const haystack = normalizeText(`${article.rawTitleTR} ${article.rawBodyTR}`);
-
   const matchedRelevantKeyword = relevantKeywords.find((keyword) =>
     haystack.includes(normalizeText(keyword)),
   );
@@ -94,6 +89,6 @@ export function isPoliticallyRelevant(article: RawArticle): {
   return {
     isRelevant: false,
     reason:
-      "Rejected because the article does not match the tracked political relevance criteria for the editorial workflow.",
+      "Rejected because the article did not show a strong enough political signal for editorial processing.",
   };
 }
