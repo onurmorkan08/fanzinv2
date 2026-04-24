@@ -1,7 +1,8 @@
 import { FALLBACK_EDITORIAL_IMAGE } from "./images";
 import type { FinalStory } from "./types";
 
-const turkishCharacterPattern = /[ğüşıöçĞÜŞİÖÇ]/;
+const turkishCharacterPattern =
+  /[\u011f\u00fc\u015f\u0131\u00f6\u00e7\u011e\u00dc\u015e\u0130\u00d6\u00c7]/;
 
 function hasTurkishCharacters(value: string) {
   return turkishCharacterPattern.test(value);

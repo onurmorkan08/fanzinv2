@@ -12,10 +12,10 @@ function addOrUpdateStoryById(stories: FinalStory[], story: FinalStory) {
   const existingIndex = stories.findIndex((item) => item.id === story.id);
 
   if (existingIndex === -1) {
-    return [story, ...stories];
+    return [...stories, story];
   }
 
-  return stories.map((item) => (item.id === story.id ? item : item));
+  return stories.map((item) => (item.id === story.id ? story : item));
 }
 
 function formatPublishedAt(value?: string) {
@@ -27,6 +27,18 @@ function formatPublishedAt(value?: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+function formatImageStatus(status: FinalStory["imageStatus"]) {
+  if (status === "found") {
+    return "Found";
+  }
+
+  if (status === "fallback") {
+    return "Fallback";
+  }
+
+  return "Missing";
 }
 
 function StoryBadge({
@@ -67,26 +79,25 @@ function StoryRow({
         <div className="relative h-44 w-full overflow-hidden rounded-[22px] border border-border bg-panel md:w-56 md:flex-none">
           <img
             src={story.imageUrl}
-            alt={story.visualHeadlineEN}
+            alt={story.visualHeadlineEN || "Editorial story image"}
             className="h-full w-full object-cover"
           />
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <StoryBadge>{story.sourceName}</StoryBadge>
-            {!story.publishable ? (
+            {story.publishable ? (
+              <StoryBadge>Ready</StoryBadge>
+            ) : (
               <StoryBadge tone="warning">Needs Review</StoryBadge>
-            ) : null}
-            {story.needsReview ? (
-              <StoryBadge tone="warning">Warning</StoryBadge>
-            ) : null}
+            )}
             {story.imageStatus === "fallback" ? (
-              <StoryBadge tone="muted">Fallback image</StoryBadge>
+              <StoryBadge tone="muted">Fallback Image</StoryBadge>
             ) : null}
           </div>
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
-              {story.visualHeadlineEN}
+              {story.visualHeadlineEN || "REVIEW REQUIRED"}
             </p>
             <h2 className="text-xl font-semibold tracking-tight text-foreground">
               {story.editorialTitleEN || "Needs Review"}
@@ -103,6 +114,7 @@ function StoryRow({
           <div className="mt-auto flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1 text-xs text-muted">
               <p>{formatPublishedAt(story.publishedAt)}</p>
+              <p>Image status: {formatImageStatus(story.imageStatus)}</p>
               <a
                 href={story.sourceUrl}
                 target="_blank"
@@ -129,11 +141,11 @@ function StoryRow({
   );
 }
 
-function PreviewCard({ story }: { story: FinalStory | undefined }) {
+function PreviewCard({ story }: { story?: FinalStory }) {
   if (!story) {
     return (
       <div className="rounded-[32px] border border-dashed border-border bg-panel p-8 text-sm text-muted">
-        Select a story to populate the visual preview area.
+        Select stories to populate the collage and single-story preview area.
       </div>
     );
   }
@@ -144,14 +156,14 @@ function PreviewCard({ story }: { story: FinalStory | undefined }) {
         <div className="min-h-[300px] bg-panel">
           <img
             src={story.imageUrl}
-            alt={story.visualHeadlineEN}
+            alt={story.visualHeadlineEN || "Editorial story image"}
             className="h-full w-full object-cover"
           />
         </div>
         <div className="flex flex-col justify-between gap-6 p-6">
           <div className="space-y-4">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
-              {story.visualHeadlineEN}
+              {story.visualHeadlineEN || "REVIEW REQUIRED"}
             </p>
             <h2 className="text-3xl font-semibold tracking-tight text-foreground">
               {story.editorialTitleEN || "Needs Review"}
@@ -167,11 +179,13 @@ function PreviewCard({ story }: { story: FinalStory | undefined }) {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <StoryBadge>{story.sourceName}</StoryBadge>
-            {!story.publishable ? (
+            {story.publishable ? (
+              <StoryBadge>Ready</StoryBadge>
+            ) : (
               <StoryBadge tone="warning">Needs Review</StoryBadge>
-            ) : null}
+            )}
             {story.imageStatus === "fallback" ? (
-              <StoryBadge tone="muted">Fallback image</StoryBadge>
+              <StoryBadge tone="muted">Fallback Image</StoryBadge>
             ) : null}
           </div>
         </div>
@@ -186,23 +200,25 @@ function SmallPreviewCard({ story }: { story: FinalStory }) {
       <div className="relative mb-3 aspect-[16/10] overflow-hidden rounded-[18px] border border-border bg-panel">
         <img
           src={story.imageUrl}
-          alt={story.visualHeadlineEN}
+          alt={story.visualHeadlineEN || "Editorial story image"}
           className="h-full w-full object-cover"
         />
       </div>
       <div className="space-y-2">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
-          {story.visualHeadlineEN}
+          {story.visualHeadlineEN || "REVIEW REQUIRED"}
         </p>
         <h3 className="line-clamp-2 text-sm font-semibold text-foreground">
           {story.editorialTitleEN || "Needs Review"}
         </h3>
         <div className="flex flex-wrap gap-2">
-          {!story.publishable ? (
+          {story.publishable ? (
+            <StoryBadge>Ready</StoryBadge>
+          ) : (
             <StoryBadge tone="warning">Needs Review</StoryBadge>
-          ) : null}
+          )}
           {story.imageStatus === "fallback" ? (
-            <StoryBadge tone="muted">Fallback image</StoryBadge>
+            <StoryBadge tone="muted">Fallback Image</StoryBadge>
           ) : null}
         </div>
       </div>
@@ -212,12 +228,11 @@ function SmallPreviewCard({ story }: { story: FinalStory }) {
 
 export default function Home() {
   const [manualLink, setManualLink] = useState("");
-  const [candidateStories, setCandidateStories] = useState(mockFinalizedStories);
-  const [selectedStories, setSelectedStories] = useState<FinalStory[]>(
-    mockFinalizedStories.filter((story) => story.publishable).slice(0, 2),
+  const [candidateStories, setCandidateStories] = useState<FinalStory[]>(
+    () => mockFinalizedStories,
   );
-
-  const previewStory = selectedStories[0] ?? candidateStories[0];
+  const [selectedStories, setSelectedStories] = useState<FinalStory[]>([]);
+  const [carouselRequested, setCarouselRequested] = useState(false);
 
   function handleAddManualLink() {
     const finalizedStory = finalizeArticle({
@@ -227,30 +242,32 @@ export default function Home() {
     });
 
     setCandidateStories((stories) => addOrUpdateStoryById(stories, finalizedStory));
+    setSelectedStories((stories) => addOrUpdateStoryById(stories, finalizedStory));
+    setCarouselRequested(true);
     setManualLink("");
   }
 
   function handleRefresh() {
     setCandidateStories(mockFinalizedStories);
+    setSelectedStories([]);
+    setCarouselRequested(false);
   }
 
   function handleCreateCarousel() {
-    const storiesToPromote = candidateStories
-      .filter((story) => story.publishable)
-      .slice(0, 3);
-
-    setSelectedStories((stories) =>
-      storiesToPromote.reduce(addOrUpdateStoryById, stories),
-    );
+    setCarouselRequested(true);
   }
 
   function addSelectedStory(story: FinalStory) {
     setSelectedStories((stories) => addOrUpdateStoryById(stories, story));
+    setCarouselRequested(true);
   }
 
   function removeSelectedStory(story: FinalStory) {
     setSelectedStories((stories) => stories.filter((item) => item.id !== story.id));
   }
+
+  const showPreview = carouselRequested || selectedStories.length > 0;
+  const previewStory = selectedStories[0];
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
@@ -378,14 +395,14 @@ export default function Home() {
             </p>
           </div>
           <div className="space-y-6">
-            <PreviewCard story={previewStory} />
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {(selectedStories.length > 0 ? selectedStories : candidateStories)
-                .slice(0, 4)
-                .map((story) => (
+            {showPreview ? <PreviewCard story={previewStory} /> : <PreviewCard />}
+            {selectedStories.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {selectedStories.map((story) => (
                   <SmallPreviewCard key={story.id} story={story} />
                 ))}
-            </div>
+              </div>
+            ) : null}
           </div>
         </section>
       </div>

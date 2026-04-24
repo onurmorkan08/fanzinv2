@@ -7,10 +7,11 @@ export const mockRawArticles: RawArticle[] = [
     sourceType: "auto",
     sourceName: "Cumhuriyet Monitor",
     sourceUrl: "https://example.com/auto-political-001",
-    rawTitleTR: "19 Mart sureci ve muhalefete yonelik baskilar",
+    rawTitleTR:
+      "19 Mart s\u00fcreci ve \u0130mamo\u011flu soru\u015fturmas\u0131nda yeni geli\u015fme",
     rawBodyTR:
-      "Ekrem Imamoglu ve CHP cevresindeki gelismeler, yeni sorusturma basliklari, protesto kisitlamalari ve ifade ozgurlugu tartismalariyla birlikte siyasi baski ekseninde aktarildi. Haberde gozaltılar, mahkeme surecleri ve muhalefet uzerindeki yargi baskisi iddialari detaylandiriliyor ve editor yalnizca ic denetim amaciyla yapilandirilmis bir is akisi bekliyor.",
-    rawImageUrl: "https://images.example.com/editorial-auto-001.jpg",
+      "Ekrem \u0130mamo\u011flu ve CHP \u00e7evresindeki geli\u015fmeler, yeni soru\u015fturma ba\u015fl\u0131klar\u0131, protesto k\u0131s\u0131tlamalar\u0131 ve ifade \u00f6zg\u00fcrl\u00fc\u011f\u00fc tart\u0131\u015fmalar\u0131yla birlikte siyasi bask\u0131 ekseninde aktar\u0131l\u0131yor. Haberde g\u00f6zalt\u0131 kararlar\u0131, mahkeme s\u00fcre\u00e7leri ve muhalefet \u00fczerindeki yarg\u0131 bask\u0131s\u0131 iddialar\u0131 ayr\u0131nt\u0131land\u0131r\u0131l\u0131yor. Metin, ortak editorial hatt\u0131n publishable mock \u00e7\u0131kt\u0131lar\u0131n\u0131 test etmek i\u00e7in yeterli uzunlukta tutuluyor.",
+    rawImageUrl: "/mock-editorial-source.svg",
     publishedAt: "2026-04-23T11:00:00Z",
     extractionStatus: "success",
   },
@@ -19,9 +20,10 @@ export const mockRawArticles: RawArticle[] = [
     sourceType: "manual",
     sourceName: "Manual Link Intake",
     sourceUrl: "https://example.com/manual-political-001",
-    rawTitleTR: "CHP ve protesto yasaklari hakkinda yeni gelisme",
+    rawTitleTR:
+      "CHP ve protesto yasaklar\u0131 hakk\u0131nda yeni geli\u015fme",
     rawBodyTR:
-      "Manuel olarak eklenen bu haber girdisi, CHP etrafindaki politik baski, protesto kisitlamalari, gozaltı kararları ve yargi sureci tartismalarina odaklanan yeterli uzunlukta bir metin sunuyor. Amac, otomatik kaynaklarla ayni boru hattindan gecen editorluk alanlarini test etmek ve gorunur alanlarda yalnizca denetimli Ingilizce ciktinin kullanildigini dogrulamaktir.",
+      "Manuel olarak eklenen bu haber girdisi, CHP etraf\u0131ndaki politik bask\u0131, protesto k\u0131s\u0131tlamalar\u0131, g\u00f6zalt\u0131 kararlar\u0131 ve yarg\u0131 s\u00fcreci tart\u0131\u015fmalar\u0131na odaklanan yeterli uzunlukta bir metin sunuyor. Ama\u00e7, otomatik kaynaklarla ayn\u0131 boru hatt\u0131ndan ge\u00e7en editorluk alanlar\u0131n\u0131 test etmek ve g\u00f6r\u00fcn\u00fcr alanlarda yaln\u0131zca denetimli \u0130ngilizce \u00e7\u0131kt\u0131n\u0131n kullan\u0131ld\u0131\u011f\u0131n\u0131 do\u011frulamakt\u0131r.",
     publishedAt: "2026-04-23T14:45:00Z",
     extractionStatus: "success",
   },
@@ -30,20 +32,20 @@ export const mockRawArticles: RawArticle[] = [
     sourceType: "manual",
     sourceName: "Manual Link Intake",
     sourceUrl: "https://example.com/manual-failed-001",
-    rawTitleTR: "Ekrem Imamoglu dosyasinda eksik cekim",
-    rawBodyTR: "Kisa metin",
+    rawTitleTR: "Ekrem \u0130mamo\u011flu dosyas\u0131nda eksik \u00e7ekim",
+    rawBodyTR: "K\u0131sa metin",
     publishedAt: "2026-04-23T15:10:00Z",
     extractionStatus: "failed",
     errorReason: "Manual extraction returned insufficient article content.",
   },
   {
     id: "sports-irrelevant-001",
-    sourceType: "manual",
+    sourceType: "auto",
     sourceName: "Sports Desk Feed",
     sourceUrl: "https://example.com/sports-irrelevant-001",
-    rawTitleTR: "Galatasaray mac hazirliklarini tamamladi",
+    rawTitleTR: "Galatasaray ma\u00e7 haz\u0131rl\u0131klar\u0131n\u0131 tamamlad\u0131",
     rawBodyTR:
-      "Takim antrenman programi, sakatlik durumu ve hafta sonu macinin teknik detaylari aktariliyor. Haberde siyasi surec, protesto, mahkeme veya muhalefet baskisi gibi izlenen editorial konular yer almiyor.",
+      "Tak\u0131m antrenman program\u0131, sakatl\u0131k durumu ve hafta sonu ma\u00e7\u0131n\u0131n teknik detaylar\u0131 aktar\u0131l\u0131yor. Haberde futbol performans\u0131, kadro tercihleri ve spor takvimi \u00f6ne \u00e7\u0131k\u0131yor. Bu girdi siyasi bask\u0131, mahkeme, protesto, muhalefet veya ifade \u00f6zg\u00fcrl\u00fc\u011f\u00fc oda\u011f\u0131nda bir haber sunmuyor.",
     publishedAt: "2026-04-23T09:30:00Z",
     extractionStatus: "success",
   },
@@ -58,9 +60,10 @@ export const mockManualAddArticle: RawArticle = {
   sourceType: "manual",
   sourceName: "Manual Link Intake",
   sourceUrl: "https://example.com/manual-added-002",
-  rawTitleTR: "Muhalefet ve yargi baskisi iddialarina dair yeni baglanti",
+  rawTitleTR:
+    "Muhalefet ve yarg\u0131 bask\u0131s\u0131 iddialar\u0131na dair yeni ba\u011flant\u0131",
   rawBodyTR:
-    "Bu manuel baglanti girdisi, muhalefet uzerindeki baski, yeni sorusturma sinyalleri, protesto sinirlamalari ve ifade ozgurlugu tartismalariyla ilgili yeterli uzunlukta bir haber govdesi saglar. Girdi, otomatik akistan farkli bir yol izlemese bile ayni relevance, editorial, image ve validation boru hattindan gecmek uzere tasarlandi.",
+    "Bu manuel ba\u011flant\u0131 girdisi, muhalefet \u00fczerindeki bask\u0131, yeni soru\u015fturma sinyalleri, protesto s\u0131n\u0131rlamalar\u0131 ve ifade \u00f6zg\u00fcrl\u00fc\u011f\u00fc tart\u0131\u015fmalar\u0131yla ilgili yeterli uzunlukta bir haber g\u00f6vdesi sa\u011flar. Girdi, otomatik ak\u0131\u015ftan farkl\u0131 bir yol izlemese bile ayn\u0131 relevance, editorial, image ve validation boru hatt\u0131ndan ge\u00e7mek \u00fczere tasarland\u0131.",
   extractionStatus: "success",
   publishedAt: "2026-04-23T16:00:00Z",
 };
