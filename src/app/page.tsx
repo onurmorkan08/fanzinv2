@@ -242,8 +242,10 @@ export default function Home() {
     setSelectedStories((stories) => stories.filter((item) => item.id !== story.id));
   }
 
-  const heroStory = selectedStories[0];
-  const collageStories = selectedStories.slice(1);
+  const collageFeed =
+    selectedStories.length > 0 ? selectedStories : candidateStories.slice(0, 8);
+  const heroStory = collageFeed[0];
+  const collageStories = collageFeed.slice(1);
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
@@ -384,11 +386,11 @@ export default function Home() {
               Kolaj ve tekil haber görselleri
             </h2>
             <p className="text-sm text-muted">
-              Homepage collage preview plus individual story assets built only from final story fields.
+              Homepage collage and single-story pages built only from final story fields.
             </p>
           </div>
 
-          {selectedStories.length === 0 ? (
+          {collageFeed.length === 0 ? (
             <div className="rounded-[32px] border border-dashed border-border bg-panel p-8 text-sm text-muted">
               Select stories to populate the homepage collage preview.
             </div>
@@ -479,7 +481,7 @@ export default function Home() {
               </article>
 
               <div className="grid gap-5 lg:grid-cols-2">
-                {selectedStories.map((story) => (
+                {collageFeed.map((story) => (
                   <article
                     key={story.id}
                     className="overflow-hidden rounded-[28px] border border-border bg-panel-strong shadow-[0_10px_30px_rgba(72,50,33,0.08)]"
