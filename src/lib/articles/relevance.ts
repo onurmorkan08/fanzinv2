@@ -1,53 +1,43 @@
 import type { RawArticle } from "./types";
 
 const relevantKeywords = [
-  "march 19",
-  "19 mart",
-  "ekrem imamoglu",
   "imamoglu",
+  "imamoglu",
+  "ekrem",
   "chp",
-  "opposition",
-  "muhalefet",
-  "investigation",
-  "sorusturma",
-  "court",
+  "19 mart",
   "dava",
-  "mahkeme",
-  "arrest",
-  "tutuklama",
-  "detention",
+  "sorusturma",
   "gozalti",
-  "protest",
+  "tutuklama",
+  "mahkeme",
   "protesto",
-  "judiciary",
   "yargi",
-  "freedom of expression",
-  "ifade ozgurl",
-  "press freedom",
-  "basin ozgurl",
-  "trustee",
   "kayyum",
-  "legal pressure",
-  "political pressure",
-  "siyasi bask",
-  "politik bask",
+  "basin ozgurlugu",
 ];
 
 const excludedKeywords = [
   "football",
   "basketball",
+  "futbol",
+  "basketbol",
   "spor",
   "sports",
   "match",
+  "mac",
   "galatasaray",
   "fenerbahce",
   "besiktas",
+  "lig",
+  "gol",
+  "kadro",
+  "antrenman",
   "celebrity",
   "magazine",
   "magazin",
   "lifestyle",
   "yasam",
-  "ordinary local service",
   "belediye hizmet",
   "altyapi",
   "economy",
@@ -63,27 +53,29 @@ const excludedKeywords = [
 function normalizeText(value: string) {
   return value
     .toLocaleLowerCase("tr-TR")
+    .replace(/\u0131/g, "i")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function isPoliticallyRelevant(article: RawArticle): {
   isRelevant: boolean;
   reason: string;
 } {
-  const haystack = normalizeText(
-    `${article.rawTitleTR} ${article.rawBodyTR} ${article.sourceName}`,
-  );
+  const haystack = normalizeText(`${article.rawTitleTR} ${article.rawBodyTR}`);
 
   const matchedRelevantKeyword = relevantKeywords.find((keyword) =>
     haystack.includes(normalizeText(keyword)),
   );
 
-  if (!matchedRelevantKeyword) {
+  if (matchedRelevantKeyword) {
     return {
-      isRelevant: false,
+      isRelevant: true,
       reason:
-        "Rejected because the article does not match the tracked political relevance criteria for the editorial workflow.",
+        "Accepted because the article matches the tracked political relevance criteria.",
     };
   }
 
@@ -100,8 +92,8 @@ export function isPoliticallyRelevant(article: RawArticle): {
   }
 
   return {
-    isRelevant: true,
+    isRelevant: false,
     reason:
-      "Accepted because the article matches the tracked political relevance criteria.",
+      "Rejected because the article does not match the tracked political relevance criteria for the editorial workflow.",
   };
 }

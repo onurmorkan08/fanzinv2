@@ -1,6 +1,6 @@
 import type { EditorialFields, RawArticle } from "./types";
 
-const MINIMUM_BODY_LENGTH = 120;
+const MINIMUM_BODY_LENGTH = 80;
 
 const failedEditorialFields: EditorialFields = {
   editorialTitleEN: "",
@@ -14,8 +14,12 @@ const failedEditorialFields: EditorialFields = {
 function normalizeText(value: string) {
   return value
     .toLocaleLowerCase("tr-TR")
+    .replace(/\u0131/g, "i")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function editorializeArticle(article: RawArticle): EditorialFields {
@@ -24,58 +28,47 @@ export function editorializeArticle(article: RawArticle): EditorialFields {
   if (
     article.extractionStatus === "failed" ||
     !body ||
-    body.length < MINIMUM_BODY_LENGTH
+    body.length <= MINIMUM_BODY_LENGTH
   ) {
     return failedEditorialFields;
   }
 
   const normalized = normalizeText(`${article.rawTitleTR} ${article.rawBodyTR}`);
 
-  let editorialTitleEN = "Political pressure case enters editorial review";
+  let editorialTitleEN = "Political pressure case moves into editorial review";
   let editorialSummaryEN =
-    "A politically relevant Turkish news item has been routed into the English editorial workflow for controlled review and publication preparation.";
+    "A politically relevant Turkish news item has been approved for the controlled English editorial workflow and prepared for publication review.";
   let editorialContextEN =
-    "This item is connected to the wider March 19 political process, opposition pressure, legal scrutiny, or civic-rights concerns.";
+    "This item is connected to the wider March 19 process, opposition pressure, legal scrutiny, or civic rights concerns.";
   let visualHeadlineEN = "POLITICAL PRESSURE UNDER REVIEW";
 
-  if (normalized.includes("basin ozgurl") || normalized.includes("press freedom")) {
-    editorialTitleEN = "Press freedom case enters editorial review";
+  if (normalized.includes("basin ozgurlugu")) {
+    editorialTitleEN = "Press freedom case moves into editorial review";
     editorialSummaryEN =
-      "A politically relevant media-rights report has been routed into the English editorial workflow for controlled review and publication preparation.";
+      "A politically relevant Turkish news item has been approved for the controlled English editorial workflow and prepared for publication review.";
     editorialContextEN =
       "This item is connected to press freedom, freedom of expression, or wider institutional pressure on public scrutiny.";
     visualHeadlineEN = "PRESS FREEDOM UNDER REVIEW";
-  } else if (
-    normalized.includes("protesto") ||
-    normalized.includes("protest") ||
-    normalized.includes("ifade ozgurl") ||
-    normalized.includes("eylem")
-  ) {
-    editorialTitleEN = "Civic rights case enters editorial review";
+  } else if (normalized.includes("protesto")) {
+    editorialTitleEN = "Civic rights case moves into editorial review";
     editorialSummaryEN =
-      "A politically relevant civic-rights report has been routed into the English editorial workflow for controlled review and publication preparation.";
+      "A politically relevant Turkish news item has been approved for the controlled English editorial workflow and prepared for publication review.";
     editorialContextEN =
-      "This item is connected to protest restrictions, freedom of expression, or pressure on public participation.";
+      "This item is connected to protest restrictions, public assembly pressure, or wider civic rights concerns.";
     visualHeadlineEN = "CIVIC RIGHTS UNDER REVIEW";
   } else if (
+    normalized.includes("dava") ||
     normalized.includes("sorusturma") ||
     normalized.includes("mahkeme") ||
-    normalized.includes("dava") ||
-    normalized.includes("yargi") ||
-    normalized.includes("investigation")
+    normalized.includes("yargi")
   ) {
-    editorialTitleEN = "Legal pressure case enters editorial review";
+    editorialTitleEN = "Legal pressure case moves into editorial review";
     editorialSummaryEN =
-      "A politically relevant legal-pressure report has been routed into the English editorial workflow for controlled review and publication preparation.";
+      "A politically relevant Turkish news item has been approved for the controlled English editorial workflow and prepared for publication review.";
     editorialContextEN =
-      "This item is connected to investigations, court proceedings, judiciary pressure, or politically sensitive legal scrutiny.";
+      "This item is connected to the wider March 19 process, opposition pressure, legal scrutiny, or civic rights concerns.";
     visualHeadlineEN = "LEGAL PRESSURE UNDER REVIEW";
   }
-
-  editorialContextEN =
-    article.sourceType === "manual"
-      ? `${editorialContextEN} The source entered through manual intake and was normalized into the shared editorial pipeline.`
-      : `${editorialContextEN} The source entered through automated intake and was normalized into the shared editorial pipeline.`;
 
   return {
     editorialTitleEN,
