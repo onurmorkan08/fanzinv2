@@ -153,10 +153,26 @@ function extractParagraphs(segment: string) {
 
   return matches
     .map((match) => normalizeWhitespace(stripTags(match[1] ?? "")))
-    .filter((paragraph) => paragraph.length >= 45)
+    .filter((paragraph) => paragraph.length >= 28)
     .filter(
       (paragraph) =>
         !/^(reklam|advertisement|ilgili haberler|etiketler|kaynak)/i.test(paragraph),
+    );
+}
+
+function extractBlockText(segment: string) {
+  const matches = Array.from(
+    segment.matchAll(/<(?:div|span)\b[^>]*>([\s\S]*?)<\/(?:div|span)>/gi),
+  );
+
+  return matches
+    .map((match) => normalizeWhitespace(stripTags(match[1] ?? "")))
+    .filter((text) => text.length >= 60)
+    .filter(
+      (text) =>
+        !/^(reklam|advertisement|ilgili haberler|etiketler|kaynak|video|galeri)/i.test(
+          text,
+        ),
     );
 }
 
@@ -190,8 +206,20 @@ function extractBodyText(html: string, jsonLdBody: string) {
     return normalizeWhitespace(paragraphs.join(" "));
   }
 
+  const blockText = extractBlockText(segment);
+
+  if (blockText.length > 0) {
+    return normalizeWhitespace(blockText.join(" "));
+  }
+
   const fallbackParagraphs = extractParagraphs(html);
-  return normalizeWhitespace(fallbackParagraphs.join(" "));
+
+  if (fallbackParagraphs.length > 0) {
+    return normalizeWhitespace(fallbackParagraphs.join(" "));
+  }
+
+  const fallbackBlocks = extractBlockText(html);
+  return normalizeWhitespace(fallbackBlocks.join(" "));
 }
 
 function extractPublishedAt(html: string, jsonLdDatePublished: string) {

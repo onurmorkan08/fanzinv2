@@ -640,8 +640,8 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="grid gap-0 xl:grid-cols-[1.55fr_1fr]">
-                    <section className="relative min-h-[580px] overflow-hidden border-b border-black/20 xl:border-r xl:border-b-0">
+                  <div className="flex flex-col">
+                    <section className="relative min-h-[580px] overflow-hidden border-b border-black/20">
                       <SafeStoryImage
                         src={heroStory?.imageUrl || ""}
                         alt={heroStory?.editorialTitleEN || "Haber görseli"}
@@ -673,14 +673,14 @@ export default function Home() {
 
                     <section className="flex flex-col gap-4 bg-[#f7efe4] p-5 sm:p-6">
                       {collageStories.length > 0 ? (
-                        <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                           {collageStories.map((story) => (
                             <article
                               key={story.id}
                               className="overflow-hidden rounded-[22px] border border-[#d8c9b6] bg-[#fff9f1]"
                             >
-                              <div className="grid grid-cols-[104px_1fr]">
-                                <div className="min-h-[136px] border-r border-[#d8c9b6]">
+                              <div className="flex flex-col">
+                                <div className="h-40 border-b border-[#d8c9b6]">
                                   <SafeStoryImage
                                     src={story.imageUrl}
                                     alt={story.editorialTitleEN || "Haber görseli"}
@@ -688,7 +688,7 @@ export default function Home() {
                                   />
                                 </div>
                                 <div className="space-y-2 p-3">
-                                  <h4 className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">
+                                  <h4 className="text-sm font-semibold leading-5 text-foreground">
                                     {story.editorialTitleEN || "İnceleme Gerekli"}
                                   </h4>
                                   <p className="line-clamp-3 text-xs leading-5 text-muted">
