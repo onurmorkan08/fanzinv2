@@ -23,6 +23,20 @@ export function StoryPreviewCard({ story }: { story: FinalStory }) {
           {story.editorialSummaryEN ||
             "This story is awaiting approved English editorial output."}
         </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center rounded-full border border-border bg-panel px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+            {story.sourceName}
+          </span>
+          <span
+            className={
+              story.publishable
+                ? "inline-flex items-center rounded-full border border-[#b9cfbf] bg-[#edf6ef] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#35543d]"
+                : "inline-flex items-center rounded-full border border-accent/20 bg-accent-soft px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent"
+            }
+          >
+            {story.publishable ? "Ready" : "Needs Review"}
+          </span>
+        </div>
       </div>
     </article>
   );

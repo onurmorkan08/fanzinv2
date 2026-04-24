@@ -22,164 +22,208 @@ function normalizeText(value: string) {
     .trim();
 }
 
-type EditorialAngle =
-  | "pressFreedom"
-  | "protest"
-  | "legal"
-  | "detention"
-  | "municipal"
-  | "opposition"
-  | "default";
+export function detectEditorialTopic(
+  text: string,
+):
+  | "media_rights"
+  | "legal_pressure"
+  | "municipal_pressure"
+  | "protest_crackdown"
+  | "detention_arrest"
+  | "opposition_pressure"
+  | "generic_political" {
+  const normalized = normalizeText(text);
 
-function getEditorialAngle(normalized: string): EditorialAngle {
+  const hasAny = (keywords: string[]) =>
+    keywords.some((keyword) => normalized.includes(normalizeText(keyword)));
+
   if (
-    normalized.includes("basin ozgurlugu") ||
-    normalized.includes("ifade ozgurlugu") ||
-    normalized.includes("gazeteci") ||
-    normalized.includes("medya")
+    hasAny([
+      "gözaltı",
+      "gozalti",
+      "tutuklama",
+      "operasyon",
+      "emniyet",
+      "serbest bırakıldı",
+      "serbest birakildi",
+    ])
   ) {
-    return "pressFreedom";
+    return "detention_arrest";
   }
 
   if (
-    normalized.includes("gozalti") ||
-    normalized.includes("tutuklama") ||
-    normalized.includes("gozaltina") ||
-    normalized.includes("galti")
+    hasAny([
+      "dava",
+      "soruşturma",
+      "sorusturma",
+      "iddianame",
+      "mahkeme",
+      "savcı",
+      "savci",
+      "yargı",
+      "yargi",
+      "fezleke",
+      "ceza",
+      "hukuk",
+    ])
   ) {
-    return "detention";
+    return "legal_pressure";
   }
 
   if (
-    normalized.includes("protesto") ||
-    normalized.includes("eylem") ||
-    normalized.includes("yuruyus") ||
-    normalized.includes("demonstrasyon")
+    hasAny([
+      "protesto",
+      "eylem",
+      "yürüyüş",
+      "yuruyus",
+      "miting",
+      "polis müdahalesi",
+      "polis mudahalesi",
+      "yasak",
+      "meydan",
+    ])
   ) {
-    return "protest";
+    return "protest_crackdown";
   }
 
   if (
-    normalized.includes("belediye") ||
-    normalized.includes("belediye baskani") ||
-    normalized.includes("kayyum") ||
-    normalized.includes("imamoglu")
+    hasAny([
+      "basın",
+      "basin",
+      "medya",
+      "gazeteci",
+      "ifade özgürlüğü",
+      "ifade ozgurlugu",
+      "yayın",
+      "yayin",
+      "sansür",
+      "sansur",
+      "erişim engeli",
+      "erisim engeli",
+    ])
   ) {
-    return "municipal";
+    return "media_rights";
   }
 
   if (
-    normalized.includes("dava") ||
-    normalized.includes("sorusturma") ||
-    normalized.includes("mahkeme") ||
-    normalized.includes("savcilik") ||
-    normalized.includes("yargi")
+    hasAny([
+      "belediye",
+      "başkan",
+      "baskan",
+      "görevden alma",
+      "gorevden alma",
+      "kayyum",
+      "ihale",
+      "belediye meclisi",
+      "yerel yönetim",
+      "yerel yonetim",
+    ])
   ) {
-    return "legal";
+    return "municipal_pressure";
   }
 
   if (
-    normalized.includes("muhalefet") ||
-    normalized.includes("chp") ||
-    normalized.includes("siyasi baski")
+    hasAny([
+      "chp",
+      "muhalefet",
+      "parti",
+      "siyasi baskı",
+      "siyasi baski",
+      "aday",
+      "seçim",
+      "secim",
+      "imamoğlu",
+      "imamoglu",
+    ])
   ) {
-    return "opposition";
+    return "opposition_pressure";
   }
 
-  return "default";
+  return "generic_political";
 }
 
-function buildAngleSpecificCopy(angle: EditorialAngle, article: RawArticle): EditorialFields {
-  const sourceContext =
-    article.sourceType === "manual"
-      ? "The source entered through manual intake and was normalized into the shared editorial pipeline."
-      : "The source entered through automated intake and was normalized into the shared editorial pipeline.";
-
-  switch (angle) {
-    case "pressFreedom":
+function buildTopicFields(
+  topic: ReturnType<typeof detectEditorialTopic>,
+): EditorialFields {
+  switch (topic) {
+    case "media_rights":
       return {
-        editorialTitleEN: "Media pressure case enters review",
-        editorialSummaryEN:
-          "The extracted report centers on pressure around journalists, public scrutiny, or freedom of expression, with the story framed as a broader media rights concern rather than a routine political update.",
-        editorialContextEN:
-          `This item appears tied to press freedom, expression rights, or institutional pressure on critical coverage. ${sourceContext}`,
+        editorialTitleEN: "Media pressure case enters editorial review",
         visualHeadlineEN: "MEDIA RIGHTS UNDER PRESSURE",
+        editorialSummaryEN:
+          "The extracted report points to pressure around media access, public communication, journalists, or freedom of expression.",
+        editorialContextEN:
+          "This item is relevant because restrictions on media and expression can shape public understanding of the March 19 process and related political developments.",
         translationStatus: "success",
         summaryStatus: "success",
       };
-    case "detention":
+    case "legal_pressure":
       return {
-        editorialTitleEN: "Detention pressure case enters review",
+        editorialTitleEN: "Legal pressure case moves into editorial review",
+        visualHeadlineEN: "LEGAL PRESSURE UNDER REVIEW",
         editorialSummaryEN:
-          "The extracted article points to detentions, arrests, or custody measures surrounding a politically sensitive development, suggesting a story framed around coercive legal pressure and public fallout.",
+          "The extracted report centers on legal scrutiny, court activity, investigation pressure, or prosecution-related developments involving opposition politics.",
         editorialContextEN:
-          `This item appears tied to detentions, arrest pressure, or the use of custody decisions in a wider political dispute. ${sourceContext}`,
-        visualHeadlineEN: "DETENTION PRESSURE IN FOCUS",
+          "This item is relevant because judicial pressure and legal proceedings are central to the broader political process being monitored.",
         translationStatus: "success",
         summaryStatus: "success",
       };
-    case "protest":
+    case "municipal_pressure":
       return {
-        editorialTitleEN: "Protest restrictions enter review",
+        editorialTitleEN: "Municipal pressure case enters editorial review",
+        visualHeadlineEN: "LOCAL DEMOCRACY UNDER PRESSURE",
         editorialSummaryEN:
-          "The extracted report appears to focus on demonstrations, public reaction, and restrictions on protest activity, placing the story within a civic-rights frame rather than a purely procedural political dispute.",
+          "The extracted report points to political pressure around local government, municipal authority, elected officials, or administrative intervention.",
         editorialContextEN:
-          `This item appears tied to protest restrictions, street demonstrations, or public reaction to political pressure. ${sourceContext}`,
-        visualHeadlineEN: "PROTEST RESTRICTIONS ESCALATE",
+          "This item is relevant because pressure on elected local government is part of the wider democratic and institutional context.",
         translationStatus: "success",
         summaryStatus: "success",
       };
-    case "municipal":
+    case "protest_crackdown":
       return {
-        editorialTitleEN: "Municipal pressure case enters review",
+        editorialTitleEN: "Protest pressure case enters editorial review",
+        visualHeadlineEN: "CIVIC ACTION UNDER PRESSURE",
         editorialSummaryEN:
-          "The extracted article suggests political or legal pressure aimed at mayoral or municipal actors, framing the story around interference in local democratic authority rather than ordinary city administration.",
+          "The extracted report appears connected to public demonstrations, protest restrictions, police intervention, or civic reaction to political developments.",
         editorialContextEN:
-          `This item appears tied to mayoral pressure, municipal political interference, or pressure on local governance. ${sourceContext}`,
-        visualHeadlineEN: "LOCAL GOVERNANCE UNDER PRESSURE",
+          "This item is relevant because protest activity and restrictions on assembly are key indicators in the wider political environment.",
         translationStatus: "success",
         summaryStatus: "success",
       };
-    case "legal":
+    case "detention_arrest":
       return {
-        editorialTitleEN: "Legal pressure case enters review",
+        editorialTitleEN: "Detention-related case enters editorial review",
+        visualHeadlineEN: "DETENTION PRESSURE UNDER REVIEW",
         editorialSummaryEN:
-          "The extracted article appears to revolve around investigations, prosecutors, or court proceedings, with the central editorial angle focused on legal scrutiny as a form of political pressure.",
+          "The extracted report points to detention, arrest, police operation, or custody-related developments connected to the political process.",
         editorialContextEN:
-          `This item appears tied to court pressure, prosecution strategy, or politically charged legal scrutiny. ${sourceContext}`,
-        visualHeadlineEN: "LEGAL SCRUTINY INTENSIFIES",
+          "This item is relevant because detention and arrest activity can indicate escalation in political and legal pressure.",
         translationStatus: "success",
         summaryStatus: "success",
       };
-    case "opposition":
+    case "opposition_pressure":
       return {
-        editorialTitleEN: "Opposition pressure story enters review",
+        editorialTitleEN: "Opposition pressure case enters editorial review",
+        visualHeadlineEN: "OPPOSITION PRESSURE UNDER REVIEW",
         editorialSummaryEN:
-          "The extracted report appears to focus on opposition figures, party pressure, or targeted political escalation, making the story more about power imbalance and institutional pressure than routine party positioning.",
+          "The extracted report is connected to pressure on opposition figures, party activity, electoral politics, or public political participation.",
         editorialContextEN:
-          `This item appears tied to opposition pressure, party targeting, or a wider climate of political coercion. ${sourceContext}`,
-        visualHeadlineEN: "OPPOSITION PRESSURE BUILDS",
+          "This item is relevant because opposition pressure is one of the central editorial categories monitored by this panel.",
         translationStatus: "success",
         summaryStatus: "success",
       };
     default:
       return {
-        editorialTitleEN: "Political pressure story enters review",
-        editorialSummaryEN:
-          "The extracted report suggests a politically sensitive development involving legal pressure, public reaction, or institutional strain, and has been routed into the English editorial workflow for closer review.",
-        editorialContextEN:
-          `This item appears tied to the wider March 19 process, political pressure, or democratic rights concerns. ${sourceContext}`,
+        editorialTitleEN: "Political pressure case enters editorial review",
         visualHeadlineEN: "POLITICAL PRESSURE UNDER REVIEW",
+        editorialSummaryEN:
+          "The extracted report contains politically relevant signals connected to legal scrutiny, public rights, opposition activity, or institutional pressure.",
+        editorialContextEN:
+          "This item is relevant to the wider March 19 editorial monitoring workflow.",
         translationStatus: "success",
         summaryStatus: "success",
       };
   }
-}
-
-function buildDeterministicEditorialFields(article: RawArticle): EditorialFields {
-  const normalized = normalizeText(`${article.rawTitleTR} ${article.rawBodyTR}`);
-  const angle = getEditorialAngle(normalized);
-  return buildAngleSpecificCopy(angle, article);
 }
 
 export async function editorializeArticle(article: RawArticle): Promise<EditorialFields> {
@@ -193,9 +237,6 @@ export async function editorializeArticle(article: RawArticle): Promise<Editoria
     return failedEditorialFields;
   }
 
-  const _llmConfigured = Boolean(
-    process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY?.trim(),
-  );
-
-  return buildDeterministicEditorialFields(article);
+  const topic = detectEditorialTopic(`${article.rawTitleTR} ${article.rawBodyTR}`);
+  return buildTopicFields(topic);
 }

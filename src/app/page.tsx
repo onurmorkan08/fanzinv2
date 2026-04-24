@@ -152,7 +152,6 @@ export default function Home() {
   const [candidatesMessage, setCandidatesMessage] = useState("");
   const [manualStatus, setManualStatus] = useState<AsyncStatus>("idle");
   const [manualMessage, setManualMessage] = useState("");
-  const [previewStatus, setPreviewStatus] = useState<AsyncStatus>("idle");
   const [previewMessage, setPreviewMessage] = useState("");
 
   async function loadCandidates() {
@@ -226,8 +225,7 @@ export default function Home() {
           ? "Manual story added and selected."
           : "Manual story added for review and selected.",
       );
-      setPreviewStatus("success");
-      setPreviewMessage("Preview updated from selected stories.");
+      setPreviewMessage("Preview updates automatically from selected stories.");
       setManualLink("");
     } catch (error) {
       setManualStatus("error");
@@ -237,21 +235,9 @@ export default function Home() {
     }
   }
 
-  function handleCreateCarousel() {
-    if (selectedStories.length === 0) {
-      setPreviewStatus("error");
-      setPreviewMessage("Select at least one story to build the preview section.");
-      return;
-    }
-
-    setPreviewStatus("success");
-    setPreviewMessage("Preview updated from selected stories.");
-  }
-
   function addSelectedStory(story: FinalStory) {
     setSelectedStories((stories) => addOrUpdateStoryById(stories, story));
-    setPreviewStatus("success");
-    setPreviewMessage("Story added to the preview queue.");
+    setPreviewMessage("Preview updates automatically from selected stories.");
   }
 
   function removeSelectedStory(story: FinalStory) {
@@ -307,13 +293,6 @@ export default function Home() {
                 className="rounded-full border border-border bg-panel px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-[#efe6d9] disabled:cursor-wait disabled:opacity-70"
               >
                 {candidatesStatus === "loading" ? "Yenileniyor..." : "Yenile"}
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateCarousel}
-                className="rounded-full border border-border bg-panel px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-[#efe6d9]"
-              >
-                Karusel Oluştur
               </button>
             </div>
           </div>
@@ -408,7 +387,7 @@ export default function Home() {
             </p>
           </div>
           <div className="space-y-6">
-            <HomepageCollagePreview stories={selectedStories} />
+            <HomepageCollagePreview selectedStories={selectedStories} />
             {selectedStories.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {selectedStories.map((story) => (
