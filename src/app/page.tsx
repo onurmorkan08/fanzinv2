@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 
 import { SafeStoryImage } from "@/components/SafeStoryImage";
-import { StoryPreviewCard } from "@/components/StoryPreviewCard";
 import type { FinalStory } from "@/lib/articles/types";
 
 type AsyncStatus = "idle" | "loading" | "success" | "error";
@@ -244,7 +243,7 @@ export default function Home() {
   }
 
   const heroStory = selectedStories[0];
-  const supportingStories = selectedStories.slice(1, 5);
+  const collageStories = selectedStories.slice(1);
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
@@ -440,7 +439,7 @@ export default function Home() {
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
-                      {supportingStories.map((story) => (
+                      {collageStories.map((story) => (
                         <article
                           key={story.id}
                           className="overflow-hidden rounded-[22px] border border-[#d8c9b6] bg-[#fff9f1]"
@@ -457,6 +456,9 @@ export default function Home() {
                               <p className="line-clamp-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
                                 {story.visualHeadlineEN || "REVIEW REQUIRED"}
                               </p>
+                              <h5 className="line-clamp-2 text-sm font-semibold text-foreground">
+                                {story.editorialTitleEN || "Needs Review"}
+                              </h5>
                               <p className="line-clamp-1 text-xs text-muted">{story.sourceName}</p>
                               <span
                                 className={
@@ -476,9 +478,58 @@ export default function Home() {
                 </div>
               </article>
 
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-5 lg:grid-cols-2">
                 {selectedStories.map((story) => (
-                  <StoryPreviewCard key={story.id} story={story} />
+                  <article
+                    key={story.id}
+                    className="overflow-hidden rounded-[28px] border border-border bg-panel-strong shadow-[0_10px_30px_rgba(72,50,33,0.08)]"
+                  >
+                    <div className="border-b border-border bg-[#f7efe4] px-5 py-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
+                        Single Story Page
+                      </p>
+                    </div>
+                    <div className="p-5">
+                      <div className="overflow-hidden rounded-[22px] border border-border bg-panel">
+                        <div className="relative aspect-[16/9]">
+                          <SafeStoryImage
+                            src={story.imageUrl}
+                            alt={story.visualHeadlineEN || "Editorial story image"}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-5 space-y-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <StoryBadge>{story.sourceName}</StoryBadge>
+                          {story.publishable ? (
+                            <StoryBadge tone="success">Ready</StoryBadge>
+                          ) : (
+                            <StoryBadge tone="warning">Needs Review</StoryBadge>
+                          )}
+                        </div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
+                          {story.visualHeadlineEN || "REVIEW REQUIRED"}
+                        </p>
+                        <h4 className="text-2xl font-semibold tracking-tight text-foreground">
+                          {story.editorialTitleEN || "Needs Review"}
+                        </h4>
+                        <p className="text-base leading-7 text-foreground/85">
+                          {story.editorialSummaryEN ||
+                            "This story is awaiting approved English editorial output."}
+                        </p>
+                        <div className="rounded-[22px] border border-border bg-panel p-4">
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                            Editorial Context
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-muted">
+                            {story.editorialContextEN ||
+                              "This item is being held in the internal review queue."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
                 ))}
               </div>
             </div>

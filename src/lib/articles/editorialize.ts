@@ -142,86 +142,92 @@ export function detectEditorialTopic(
   return "generic_political";
 }
 
-function buildTopicFields(
+function detectFocus(normalized: string) {
+  if (normalized.includes("imamoglu")) {
+    return "Ekrem Imamoglu";
+  }
+
+  if (normalized.includes("chp")) {
+    return "the CHP";
+  }
+
+  if (normalized.includes("gazeteci") || normalized.includes("medya")) {
+    return "journalists and media actors";
+  }
+
+  if (normalized.includes("belediye") || normalized.includes("baskan")) {
+    return "local government actors";
+  }
+
+  if (normalized.includes("protesto") || normalized.includes("eylem")) {
+    return "public demonstrators";
+  }
+
+  return "opposition actors";
+}
+
+function buildSummaryDetails(
   topic: ReturnType<typeof detectEditorialTopic>,
-): EditorialFields {
+  normalized: string,
+) {
+  const focus = detectFocus(normalized);
+
   switch (topic) {
     case "media_rights":
       return {
-        editorialTitleEN: "Media pressure case enters editorial review",
-        visualHeadlineEN: "MEDIA RIGHTS UNDER PRESSURE",
-        editorialSummaryEN:
-          "The extracted report points to pressure around media access, public communication, journalists, or freedom of expression.",
-        editorialContextEN:
+        title: "Media pressure case enters editorial review",
+        headline: "MEDIA RIGHTS UNDER PRESSURE",
+        summary: `The extracted report points to pressure around media access, public communication, journalists, or freedom of expression. It appears to focus in particular on ${focus} and the public visibility of the wider political dispute.`,
+        context:
           "This item is relevant because restrictions on media and expression can shape public understanding of the March 19 process and related political developments.",
-        translationStatus: "success",
-        summaryStatus: "success",
       };
     case "legal_pressure":
       return {
-        editorialTitleEN: "Legal pressure case moves into editorial review",
-        visualHeadlineEN: "LEGAL PRESSURE UNDER REVIEW",
-        editorialSummaryEN:
-          "The extracted report centers on legal scrutiny, court activity, investigation pressure, or prosecution-related developments involving opposition politics.",
-        editorialContextEN:
+        title: "Legal pressure case moves into editorial review",
+        headline: "LEGAL PRESSURE UNDER REVIEW",
+        summary: `The extracted report centers on legal scrutiny, court activity, investigation pressure, or prosecution-related developments involving opposition politics. It appears to focus on ${focus} through judicial procedure, prosecutorial pressure, or courtroom escalation.`,
+        context:
           "This item is relevant because judicial pressure and legal proceedings are central to the broader political process being monitored.",
-        translationStatus: "success",
-        summaryStatus: "success",
       };
     case "municipal_pressure":
       return {
-        editorialTitleEN: "Municipal pressure case enters editorial review",
-        visualHeadlineEN: "LOCAL DEMOCRACY UNDER PRESSURE",
-        editorialSummaryEN:
-          "The extracted report points to political pressure around local government, municipal authority, elected officials, or administrative intervention.",
-        editorialContextEN:
+        title: "Municipal pressure case enters editorial review",
+        headline: "LOCAL DEMOCRACY UNDER PRESSURE",
+        summary: `The extracted report points to political pressure around local government, municipal authority, elected officials, or administrative intervention. It appears to focus on ${focus} through local institutional interference rather than routine service coverage.`,
+        context:
           "This item is relevant because pressure on elected local government is part of the wider democratic and institutional context.",
-        translationStatus: "success",
-        summaryStatus: "success",
       };
     case "protest_crackdown":
       return {
-        editorialTitleEN: "Protest pressure case enters editorial review",
-        visualHeadlineEN: "CIVIC ACTION UNDER PRESSURE",
-        editorialSummaryEN:
-          "The extracted report appears connected to public demonstrations, protest restrictions, police intervention, or civic reaction to political developments.",
-        editorialContextEN:
+        title: "Protest pressure case enters editorial review",
+        headline: "CIVIC ACTION UNDER PRESSURE",
+        summary: `The extracted report appears connected to public demonstrations, protest restrictions, police intervention, or civic reaction to political developments. It appears to focus on ${focus} within a story shaped by street response and assembly pressure.`,
+        context:
           "This item is relevant because protest activity and restrictions on assembly are key indicators in the wider political environment.",
-        translationStatus: "success",
-        summaryStatus: "success",
       };
     case "detention_arrest":
       return {
-        editorialTitleEN: "Detention-related case enters editorial review",
-        visualHeadlineEN: "DETENTION PRESSURE UNDER REVIEW",
-        editorialSummaryEN:
-          "The extracted report points to detention, arrest, police operation, or custody-related developments connected to the political process.",
-        editorialContextEN:
+        title: "Detention-related case enters editorial review",
+        headline: "DETENTION PRESSURE UNDER REVIEW",
+        summary: `The extracted report points to detention, arrest, police operation, or custody-related developments connected to the political process. It appears to focus on ${focus} through escalation in police or prosecutorial action.`,
+        context:
           "This item is relevant because detention and arrest activity can indicate escalation in political and legal pressure.",
-        translationStatus: "success",
-        summaryStatus: "success",
       };
     case "opposition_pressure":
       return {
-        editorialTitleEN: "Opposition pressure case enters editorial review",
-        visualHeadlineEN: "OPPOSITION PRESSURE UNDER REVIEW",
-        editorialSummaryEN:
-          "The extracted report is connected to pressure on opposition figures, party activity, electoral politics, or public political participation.",
-        editorialContextEN:
+        title: "Opposition pressure case enters editorial review",
+        headline: "OPPOSITION PRESSURE UNDER REVIEW",
+        summary: `The extracted report is connected to pressure on opposition figures, party activity, electoral politics, or public political participation. It appears to focus on ${focus} within a broader climate of political targeting and organizational pressure.`,
+        context:
           "This item is relevant because opposition pressure is one of the central editorial categories monitored by this panel.",
-        translationStatus: "success",
-        summaryStatus: "success",
       };
     default:
       return {
-        editorialTitleEN: "Political pressure case enters editorial review",
-        visualHeadlineEN: "POLITICAL PRESSURE UNDER REVIEW",
-        editorialSummaryEN:
-          "The extracted report contains politically relevant signals connected to legal scrutiny, public rights, opposition activity, or institutional pressure.",
-        editorialContextEN:
+        title: "Political pressure case enters editorial review",
+        headline: "POLITICAL PRESSURE UNDER REVIEW",
+        summary: `The extracted report contains politically relevant signals connected to legal scrutiny, public rights, opposition activity, or institutional pressure. It appears to focus on ${focus} within the broader March 19 monitoring frame.`,
+        context:
           "This item is relevant to the wider March 19 editorial monitoring workflow.",
-        translationStatus: "success",
-        summaryStatus: "success",
       };
   }
 }
@@ -237,6 +243,16 @@ export async function editorializeArticle(article: RawArticle): Promise<Editoria
     return failedEditorialFields;
   }
 
-  const topic = detectEditorialTopic(`${article.rawTitleTR} ${article.rawBodyTR}`);
-  return buildTopicFields(topic);
+  const normalized = normalizeText(`${article.rawTitleTR} ${article.rawBodyTR}`);
+  const topic = detectEditorialTopic(normalized);
+  const details = buildSummaryDetails(topic, normalized);
+
+  return {
+    editorialTitleEN: details.title,
+    editorialSummaryEN: details.summary,
+    editorialContextEN: details.context,
+    visualHeadlineEN: details.headline,
+    translationStatus: "success",
+    summaryStatus: "success",
+  };
 }
