@@ -232,6 +232,9 @@ function StoryRow({
 }
 
 export default function Home() {
+  const [passwordInput, setPasswordInput] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
   const [manualLink, setManualLink] = useState("");
   const [candidateStories, setCandidateStories] = useState<FinalStory[]>([]);
   const [selectedStories, setSelectedStories] = useState<FinalStory[]>([]);
@@ -311,8 +314,20 @@ export default function Home() {
   }
 
   useEffect(() => {
-    void loadCandidates();
-  }, []);
+    if (isUnlocked) {
+      void loadCandidates();
+    }
+  }, [isUnlocked]);
+
+  function handleUnlock() {
+    if (passwordInput === "1919") {
+      setIsUnlocked(true);
+      setPasswordError("");
+      return;
+    }
+
+    setPasswordError("Şifre yanlış.");
+  }
 
   async function handleAddManualLink() {
     if (!manualLink.trim()) {
@@ -381,6 +396,65 @@ export default function Home() {
     selectedStories.length > 0 ? selectedStories : candidateStories.slice(0, 8);
   const heroStory = collageFeed[0];
   const collageStories = collageFeed.slice(1);
+
+  if (!isUnlocked) {
+    return (
+      <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
+        <div className="mx-auto flex min-h-[80vh] w-full max-w-xl items-center justify-center">
+          <section className="w-full rounded-[32px] border border-border bg-panel-strong p-8 shadow-[0_12px_40px_rgba(72,50,33,0.06)]">
+            <div className="mb-6 flex items-center gap-4">
+              <img
+                src="/march19-platform-logo.png"
+                alt="March 19 Platform logosu"
+                className="h-16 w-16 rounded-full bg-white p-1 shadow-sm"
+              />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent">
+                  Güvenli Giriş
+                </p>
+                <h1 className="text-2xl font-semibold tracking-tight">
+                  March 19 Platform Fanzin Paneli
+                </h1>
+              </div>
+            </div>
+
+            <p className="mb-5 text-sm leading-7 text-muted">
+              İç editoryal panele devam etmek için şifreyi gir.
+            </p>
+
+            <div className="space-y-4">
+              <label className="block">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+                  Şifre
+                </span>
+                <input
+                  type="password"
+                  value={passwordInput}
+                  onChange={(event) => setPasswordInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      handleUnlock();
+                    }
+                  }}
+                  className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-accent"
+                />
+              </label>
+
+              {passwordError ? <p className="text-sm text-accent">{passwordError}</p> : null}
+
+              <button
+                type="button"
+                onClick={handleUnlock}
+                className="w-full rounded-full border border-accent bg-accent px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#741712]"
+              >
+                Giriş Yap
+              </button>
+            </div>
+          </section>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
@@ -549,7 +623,7 @@ export default function Home() {
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
                         <img
-                          src="/march19-platform-logo.svg"
+                          src="/march19-platform-logo.png"
                           alt="March 19 Platform logosu"
                           className="h-16 w-16 rounded-full bg-white p-1 shadow-sm"
                         />
@@ -577,7 +651,7 @@ export default function Home() {
                       <div className="absolute inset-x-0 bottom-0 space-y-4 p-8 text-white sm:p-10">
                         <div className="flex items-center gap-3">
                           <img
-                            src="/march19-platform-logo.svg"
+                        src="/march19-platform-logo.png"
                             alt="March 19 Platform logosu"
                             className="h-12 w-12 rounded-full border border-white/30 bg-white p-1"
                           />
@@ -692,7 +766,7 @@ export default function Home() {
                         <div className="border-b border-border bg-[#f7efe4] px-5 py-4">
                           <div className="flex items-center gap-3">
                             <img
-                              src="/march19-platform-logo.svg"
+                              src="/march19-platform-logo.png"
                               alt="March 19 Platform logosu"
                               className="h-10 w-10 rounded-full border border-border bg-white p-1"
                             />
