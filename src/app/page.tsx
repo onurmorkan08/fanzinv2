@@ -19,10 +19,10 @@ function addOrUpdateStoryById(stories: FinalStory[], story: FinalStory) {
 
 function formatPublishedAt(value?: string) {
   if (!value) {
-    return "Date unavailable";
+    return "Tarih yok";
   }
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("tr-TR", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
@@ -30,14 +30,14 @@ function formatPublishedAt(value?: string) {
 
 function formatImageStatus(status: FinalStory["imageStatus"]) {
   if (status === "found") {
-    return "Found";
+    return "Bulundu";
   }
 
   if (status === "fallback") {
-    return "Fallback";
+    return "Yedek";
   }
 
-  return "Missing";
+  return "Eksik";
 }
 
 function storyStatusClasses(publishable: boolean) {
@@ -71,78 +71,161 @@ function StoryBadge({
   );
 }
 
+function StoryEditor({
+  story,
+  onFieldChange,
+}: {
+  story: FinalStory;
+  onFieldChange: (storyId: string, patch: Partial<FinalStory>) => void;
+}) {
+  return (
+    <div className="grid gap-3 rounded-[22px] border border-border bg-background/70 p-4">
+      <label className="space-y-1">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+          Başlık
+        </span>
+        <input
+          value={story.editorialTitleEN}
+          onChange={(event) =>
+            onFieldChange(story.id, { editorialTitleEN: event.target.value })
+          }
+          className="w-full rounded-2xl border border-border bg-panel px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
+        />
+      </label>
+
+      <label className="space-y-1">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+          Kısa Başlık
+        </span>
+        <input
+          value={story.visualHeadlineEN}
+          onChange={(event) =>
+            onFieldChange(story.id, { visualHeadlineEN: event.target.value })
+          }
+          className="w-full rounded-2xl border border-border bg-panel px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
+        />
+      </label>
+
+      <label className="space-y-1">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+          Özet
+        </span>
+        <textarea
+          value={story.editorialSummaryEN}
+          onChange={(event) =>
+            onFieldChange(story.id, { editorialSummaryEN: event.target.value })
+          }
+          rows={3}
+          className="w-full rounded-2xl border border-border bg-panel px-3 py-2 text-sm leading-6 text-foreground outline-none focus:border-accent"
+        />
+      </label>
+
+      <label className="space-y-1">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+          Haber Metni
+        </span>
+        <textarea
+          value={story.editorialContextEN}
+          onChange={(event) =>
+            onFieldChange(story.id, { editorialContextEN: event.target.value })
+          }
+          rows={4}
+          className="w-full rounded-2xl border border-border bg-panel px-3 py-2 text-sm leading-6 text-foreground outline-none focus:border-accent"
+        />
+      </label>
+
+      <label className="space-y-1">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+          Görsel URL
+        </span>
+        <input
+          value={story.imageUrl}
+          onChange={(event) =>
+            onFieldChange(story.id, {
+              imageUrl: event.target.value,
+              imageStatus: event.target.value ? "found" : "fallback",
+            })
+          }
+          className="w-full rounded-2xl border border-border bg-panel px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
+        />
+      </label>
+    </div>
+  );
+}
+
 function StoryRow({
   story,
   actionLabel,
   onAction,
+  onFieldChange,
 }: {
   story: FinalStory;
   actionLabel: string;
   onAction: (story: FinalStory) => void;
+  onFieldChange: (storyId: string, patch: Partial<FinalStory>) => void;
 }) {
   return (
     <article className="rounded-[28px] border border-border bg-panel-strong p-4 shadow-[0_10px_30px_rgba(72,50,33,0.06)]">
-      <div className="flex flex-col gap-4 md:flex-row">
-        <div className="relative h-44 w-full overflow-hidden rounded-[22px] border border-border bg-panel md:w-56 md:flex-none">
-          <SafeStoryImage
-            src={story.imageUrl}
-            alt={story.visualHeadlineEN || "Editorial story image"}
-            className="h-full w-full object-cover"
-          />
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <StoryBadge>{story.sourceName}</StoryBadge>
-            {story.publishable ? (
-              <StoryBadge tone="success">Ready</StoryBadge>
-            ) : (
-              <StoryBadge tone="warning">Needs Review</StoryBadge>
-            )}
-            {story.imageStatus === "fallback" ? (
-              <StoryBadge tone="muted">Fallback Image</StoryBadge>
-            ) : null}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 md:flex-row">
+          <div className="relative h-44 w-full overflow-hidden rounded-[22px] border border-border bg-panel md:w-56 md:flex-none">
+            <SafeStoryImage
+              src={story.imageUrl}
+              alt={story.visualHeadlineEN || "Haber görseli"}
+              className="h-full w-full object-cover"
+            />
           </div>
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
-              {story.visualHeadlineEN || "REVIEW REQUIRED"}
-            </p>
-            <h2 className="text-xl font-semibold tracking-tight text-foreground">
-              {story.editorialTitleEN || "Needs Review"}
-            </h2>
-            <p className="text-sm leading-6 text-foreground/85">
-              {story.editorialSummaryEN ||
-                "This story could not produce approved English editorial fields yet."}
-            </p>
-            <p className="text-sm leading-6 text-muted">
-              {story.editorialContextEN ||
-                "This item is being held in the internal review queue."}
-            </p>
-          </div>
-          <div className="mt-auto flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1 text-xs text-muted">
-              <p>{formatPublishedAt(story.publishedAt)}</p>
-              <p>Image status: {formatImageStatus(story.imageStatus)}</p>
-              <a
-                href={story.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="underline decoration-border underline-offset-4"
-              >
-                Source link
-              </a>
-              {story.errorReason ? (
-                <p className="text-accent">{story.errorReason}</p>
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <StoryBadge>{story.sourceName}</StoryBadge>
+              {story.publishable ? (
+                <StoryBadge tone="success">Hazır</StoryBadge>
+              ) : (
+                <StoryBadge tone="warning">İnceleme Gerekli</StoryBadge>
+              )}
+              {story.imageStatus === "fallback" ? (
+                <StoryBadge tone="muted">Yedek Görsel</StoryBadge>
               ) : null}
             </div>
-            <button
-              type="button"
-              onClick={() => onAction(story)}
-              className="rounded-full border border-accent bg-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#741712]"
-            >
-              {actionLabel}
-            </button>
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
+                {story.visualHeadlineEN || "İNCELEME BEKLİYOR"}
+              </p>
+              <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                {story.editorialTitleEN || "İnceleme Gerekli"}
+              </h2>
+              <p className="text-sm leading-6 text-foreground/85">
+                {story.editorialSummaryEN || "Bu haber için görünür özet üretilemedi."}
+              </p>
+              <p className="text-sm leading-6 text-muted">
+                {story.editorialContextEN || "Bu haber iç inceleme kuyruğunda tutuluyor."}
+              </p>
+            </div>
+            <div className="mt-auto flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1 text-xs text-muted">
+                <p>{formatPublishedAt(story.publishedAt)}</p>
+                <p>Görsel durumu: {formatImageStatus(story.imageStatus)}</p>
+                <a
+                  href={story.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline decoration-border underline-offset-4"
+                >
+                  Kaynak linki
+                </a>
+                {story.errorReason ? <p className="text-accent">{story.errorReason}</p> : null}
+              </div>
+              <button
+                type="button"
+                onClick={() => onAction(story)}
+                className="rounded-full border border-accent bg-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#741712]"
+              >
+                {actionLabel}
+              </button>
+            </div>
           </div>
         </div>
+        <StoryEditor story={story} onFieldChange={onFieldChange} />
       </div>
     </article>
   );
@@ -165,12 +248,12 @@ export default function Home() {
   async function downloadNodeAsPng(node: HTMLElement | null, filename: string) {
     if (!node) {
       setDownloadStatus("error");
-      setDownloadMessage("No visual output was available to export.");
+      setDownloadMessage("İndirilecek görsel bulunamadı.");
       return;
     }
 
     setDownloadStatus("loading");
-    setDownloadMessage("Preparing PNG export...");
+    setDownloadMessage("PNG hazırlanıyor...");
 
     try {
       const { toPng } = await import("html-to-image");
@@ -186,18 +269,18 @@ export default function Home() {
       link.click();
 
       setDownloadStatus("success");
-      setDownloadMessage(`${filename} downloaded.`);
+      setDownloadMessage(`${filename} indirildi.`);
     } catch (error) {
       setDownloadStatus("error");
       setDownloadMessage(
-        error instanceof Error ? error.message : "Visual export failed.",
+        error instanceof Error ? error.message : "Görsel dışa aktarımı başarısız oldu.",
       );
     }
   }
 
   async function loadCandidates() {
     setCandidatesStatus("loading");
-    setCandidatesMessage("Fetching source articles...");
+    setCandidatesMessage("Kaynak haberler çekiliyor...");
 
     try {
       const response = await fetch("/api/articles/candidates", {
@@ -209,20 +292,20 @@ export default function Home() {
       };
 
       if (!response.ok) {
-        throw new Error(payload.error || "Automatic source ingestion failed.");
+        throw new Error(payload.error || "Otomatik kaynak çekimi başarısız oldu.");
       }
 
       setCandidateStories(payload.stories ?? []);
       setCandidatesStatus("success");
       setCandidatesMessage(
         payload.stories && payload.stories.length > 0
-          ? `${payload.stories.length} candidate stories loaded.`
-          : "No source stories were extracted from the current source list.",
+          ? `${payload.stories.length} aday haber yüklendi.`
+          : "Kaynak listesinden haber çıkarılamadı.",
       );
     } catch (error) {
       setCandidatesStatus("error");
       setCandidatesMessage(
-        error instanceof Error ? error.message : "Automatic source ingestion failed.",
+        error instanceof Error ? error.message : "Otomatik kaynak çekimi başarısız oldu.",
       );
     }
   }
@@ -234,12 +317,12 @@ export default function Home() {
   async function handleAddManualLink() {
     if (!manualLink.trim()) {
       setManualStatus("error");
-      setManualMessage("Paste a source link before adding it.");
+      setManualMessage("Önce bir haber linki yapıştır.");
       return;
     }
 
     setManualStatus("loading");
-    setManualMessage("Extracting article from manual link...");
+    setManualMessage("Manuel link işleniyor...");
 
     try {
       const response = await fetch("/api/articles/manual", {
@@ -255,7 +338,7 @@ export default function Home() {
       };
 
       if (!response.ok || !payload.story) {
-        throw new Error(payload.error || "Manual article extraction failed.");
+        throw new Error(payload.error || "Manuel haber çıkarımı başarısız oldu.");
       }
 
       setCandidateStories((stories) => addOrUpdateStoryById(stories, payload.story!));
@@ -263,26 +346,35 @@ export default function Home() {
       setManualStatus("success");
       setManualMessage(
         payload.story.publishable
-          ? "Manual story added and selected."
-          : "Manual story added for review and selected.",
+          ? "Manuel haber eklendi ve seçildi."
+          : "Manuel haber inceleme için eklendi ve seçildi.",
       );
-      setPreviewMessage("Preview updates automatically from selected stories.");
+      setPreviewMessage("Kolaj ve tekil görseller seçilen haberlere göre güncellendi.");
       setManualLink("");
     } catch (error) {
       setManualStatus("error");
       setManualMessage(
-        error instanceof Error ? error.message : "Manual article extraction failed.",
+        error instanceof Error ? error.message : "Manuel haber çıkarımı başarısız oldu.",
       );
     }
   }
 
   function addSelectedStory(story: FinalStory) {
     setSelectedStories((stories) => addOrUpdateStoryById(stories, story));
-    setPreviewMessage("Preview updates automatically from selected stories.");
+    setPreviewMessage("Kolaj ve tekil görseller seçilen haberlere göre güncellendi.");
   }
 
   function removeSelectedStory(story: FinalStory) {
     setSelectedStories((stories) => stories.filter((item) => item.id !== story.id));
+  }
+
+  function updateStoryFields(storyId: string, patch: Partial<FinalStory>) {
+    setCandidateStories((stories) =>
+      stories.map((story) => (story.id === storyId ? { ...story, ...patch } : story)),
+    );
+    setSelectedStories((stories) =>
+      stories.map((story) => (story.id === storyId ? { ...story, ...patch } : story)),
+    );
   }
 
   const collageFeed =
@@ -296,15 +388,14 @@ export default function Home() {
         <header className="rounded-[32px] border border-border bg-panel-strong px-6 py-8 shadow-[0_12px_40px_rgba(72,50,33,0.06)] sm:px-8">
           <div className="max-w-3xl space-y-3">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent">
-              Internal Editorial Admin
+              Editoryal İç Panel
             </p>
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               March 19 Platform Fanzin Paneli
             </h1>
             <p className="text-sm leading-7 text-muted sm:text-base">
-              Internal editorial tool for collecting politically relevant Turkish
-              reporting, converting it into controlled English output, resolving
-              imagery, and preparing story-safe data for publication workflows.
+              Politik açıdan ilgili Türkçe haberleri toplayan, görünür özet alanlarını
+              düzenlenebilir tutan ve seçilen haberlerden görsel çıktı hazırlayan iç araç.
             </p>
           </div>
         </header>
@@ -313,7 +404,7 @@ export default function Home() {
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
             <label className="flex-1">
               <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.22em] text-muted">
-                Manual link input
+                Manuel link girişi
               </span>
               <input
                 type="url"
@@ -345,19 +436,19 @@ export default function Home() {
           <div className="mt-4 grid gap-2 text-sm text-muted md:grid-cols-4">
             <p>
               Auto fetch:{" "}
-              <span className="font-medium text-foreground">{candidatesMessage || "Idle"}</span>
+              <span className="font-medium text-foreground">{candidatesMessage || "Boşta"}</span>
             </p>
             <p>
-              Manual link:{" "}
-              <span className="font-medium text-foreground">{manualMessage || "Idle"}</span>
+              Manuel link:{" "}
+              <span className="font-medium text-foreground">{manualMessage || "Boşta"}</span>
             </p>
             <p>
-              Preview:{" "}
-              <span className="font-medium text-foreground">{previewMessage || "Idle"}</span>
+              Önizleme:{" "}
+              <span className="font-medium text-foreground">{previewMessage || "Boşta"}</span>
             </p>
             <p>
-              Download:{" "}
-              <span className="font-medium text-foreground">{downloadMessage || "Idle"}</span>
+              İndirme:{" "}
+              <span className="font-medium text-foreground">{downloadMessage || "Boşta"}</span>
             </p>
           </div>
         </section>
@@ -368,10 +459,10 @@ export default function Home() {
               <div>
                 <h2 className="text-2xl font-semibold tracking-tight">Aday Haberler</h2>
                 <p className="text-sm text-muted">
-                  Unified output from the finalized V2 article pipeline.
+                  Nihai hikâye alanları üzerinden düzenlenebilir aday haber listesi.
                 </p>
               </div>
-              <StoryBadge tone="muted">{candidateStories.length} stories</StoryBadge>
+              <StoryBadge tone="muted">{candidateStories.length} haber</StoryBadge>
             </div>
             <div className="flex flex-col gap-4">
               {candidateStories.length > 0 ? (
@@ -381,13 +472,14 @@ export default function Home() {
                     story={story}
                     actionLabel="Seç"
                     onAction={addSelectedStory}
+                    onFieldChange={updateStoryFields}
                   />
                 ))
               ) : (
                 <div className="rounded-[28px] border border-dashed border-border bg-panel p-8 text-sm text-muted">
                   {candidatesStatus === "loading"
-                    ? "Source ingestion is running."
-                    : "No candidate stories are available yet."}
+                    ? "Kaynak haberler çekiliyor."
+                    : "Henüz aday haber yok."}
                 </div>
               )}
             </div>
@@ -398,10 +490,10 @@ export default function Home() {
               <div>
                 <h2 className="text-2xl font-semibold tracking-tight">Seçilen Haberler</h2>
                 <p className="text-sm text-muted">
-                  Stories staged for collage and single-story visual output.
+                  Kolaj ve tekil haber görsellerinde kullanılacak düzenlenebilir seçki.
                 </p>
               </div>
-              <StoryBadge tone="muted">{selectedStories.length} selected</StoryBadge>
+              <StoryBadge tone="muted">{selectedStories.length} seçili</StoryBadge>
             </div>
             <div className="flex flex-col gap-4">
               {selectedStories.length > 0 ? (
@@ -411,12 +503,12 @@ export default function Home() {
                     story={story}
                     actionLabel="Kaldır"
                     onAction={removeSelectedStory}
+                    onFieldChange={updateStoryFields}
                   />
                 ))
               ) : (
                 <div className="rounded-[28px] border border-dashed border-border bg-panel p-8 text-sm text-muted">
-                  No stories selected yet. Pick candidate items to stage them for
-                  visual production.
+                  Henüz seçili haber yok. Aday haberlerden seçtikçe kolaj ve tekil çıktılar oluşur.
                 </div>
               )}
             </div>
@@ -430,12 +522,14 @@ export default function Home() {
                 Kolaj ve tekil haber görselleri
               </h2>
               <p className="text-sm text-muted">
-                Homepage collage and single-story pages built only from final English story fields.
+                Seçili haberlerden otomatik oluşan ana sayfa kolajı ve tekil haber görselleri.
               </p>
             </div>
             <button
               type="button"
-              onClick={() => void downloadNodeAsPng(collageRef.current, "fanzin-homepage-collage.png")}
+              onClick={() =>
+                void downloadNodeAsPng(collageRef.current, "fanzin-ana-sayfa-kolaj.png")
+              }
               disabled={downloadStatus === "loading" || collageFeed.length === 0}
               className="rounded-full border border-accent bg-accent px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#741712] disabled:cursor-wait disabled:opacity-70"
             >
@@ -445,41 +539,38 @@ export default function Home() {
 
           {collageFeed.length === 0 ? (
             <div className="rounded-[32px] border border-dashed border-border bg-panel p-8 text-sm text-muted">
-              Seçilen haberler geldiğinde ana sayfa kolajı burada oluşur.
+              Seçilen haberler geldiğinde kolaj burada oluşur.
             </div>
           ) : (
             <div className="space-y-6">
               <div ref={collageRef}>
                 <article className="overflow-hidden rounded-[34px] border border-border bg-[#5b1816] shadow-[0_18px_44px_rgba(72,50,33,0.18)]">
                   <div className="border-b border-black/15 px-6 py-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
-                        <div className="rounded-full bg-white p-1.5 shadow-sm">
-                          <img
-                            src="/march19-platform-logo.svg"
-                            alt="March 19 Platform logo"
-                            className="h-14 w-14 rounded-full object-cover"
-                          />
-                        </div>
+                        <img
+                          src="/march19-platform-logo.svg"
+                          alt="March 19 Platform logosu"
+                          className="h-16 w-16 rounded-full bg-white p-1 shadow-sm"
+                        />
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/70">
-                            Homepage Collage
+                          <p className="text-lg font-semibold tracking-tight text-white">
+                            March 19 Platform
                           </p>
-                          <p className="text-sm text-white/85">
-                            The first selected story leads the page and every other story appears as
-                            a visible front-page block with image and headline.
+                          <p className="text-sm text-white/80">
+                            Seçili haber kolajı
                           </p>
                         </div>
                       </div>
-                      <StoryBadge tone="muted">{collageFeed.length} stories</StoryBadge>
+                      <StoryBadge tone="muted">{collageFeed.length} haber</StoryBadge>
                     </div>
                   </div>
 
                   <div className="grid gap-0 xl:grid-cols-[1.55fr_1fr]">
-                    <section className="relative min-h-[560px] overflow-hidden border-b border-black/20 xl:border-r xl:border-b-0">
+                    <section className="relative min-h-[580px] overflow-hidden border-b border-black/20 xl:border-r xl:border-b-0">
                       <SafeStoryImage
                         src={heroStory?.imageUrl || ""}
-                        alt={heroStory?.visualHeadlineEN || "Editorial story image"}
+                        alt={heroStory?.editorialTitleEN || "Haber görseli"}
                         className="absolute inset-0 h-full w-full object-cover"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,0.96)] via-[rgba(0,0,0,0.42)] to-transparent" />
@@ -487,123 +578,97 @@ export default function Home() {
                         <div className="flex items-center gap-3">
                           <img
                             src="/march19-platform-logo.svg"
-                            alt="March 19 Platform logo"
-                            className="h-12 w-12 rounded-full border border-white/30 bg-white/95 p-1"
+                            alt="March 19 Platform logosu"
+                            className="h-12 w-12 rounded-full border border-white/30 bg-white p-1"
                           />
-                          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/75">
-                            Main Cover Story
-                          </p>
+                          <span className={storyStatusClasses(Boolean(heroStory?.publishable))}>
+                            {heroStory?.publishable ? "Hazır" : "İnceleme Gerekli"}
+                          </span>
                         </div>
-                        <h3 className="max-w-3xl text-4xl font-semibold uppercase leading-[1.02] tracking-[0.08em] sm:text-5xl">
-                          {heroStory?.visualHeadlineEN || "REVIEW REQUIRED"}
+                        <h3 className="max-w-3xl text-4xl font-semibold leading-[1.02] tracking-tight sm:text-5xl">
+                          {heroStory?.editorialTitleEN || "İnceleme Gerekli"}
                         </h3>
                         <p className="max-w-2xl text-sm leading-6 text-white/88 sm:text-base">
-                          {heroStory?.editorialSummaryEN ||
-                            "This story is awaiting approved English editorial output."}
+                          {heroStory?.editorialSummaryEN || "Bu haber için görünür özet üretilemedi."}
+                        </p>
+                        <p className="max-w-2xl text-sm leading-6 text-white/72">
+                          {heroStory?.editorialContextEN || "Bu haber iç inceleme kuyruğunda tutuluyor."}
                         </p>
                       </div>
                     </section>
 
                     <section className="flex flex-col gap-4 bg-[#f7efe4] p-5 sm:p-6">
-                      <div className="space-y-4 rounded-[26px] border border-[#d8c9b6] bg-[#fff9f1] p-5">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="inline-flex items-center rounded-full border border-border bg-panel px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
-                            {heroStory?.sourceName || "Editorial Source"}
-                          </span>
-                          <span className={storyStatusClasses(Boolean(heroStory?.publishable))}>
-                            {heroStory?.publishable ? "Ready" : "Needs Review"}
-                          </span>
+                      {collageStories.length > 0 ? (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {collageStories.map((story) => (
+                            <article
+                              key={story.id}
+                              className="overflow-hidden rounded-[22px] border border-[#d8c9b6] bg-[#fff9f1]"
+                            >
+                              <div className="grid grid-cols-[104px_1fr]">
+                                <div className="min-h-[136px] border-r border-[#d8c9b6]">
+                                  <SafeStoryImage
+                                    src={story.imageUrl}
+                                    alt={story.editorialTitleEN || "Haber görseli"}
+                                    className="h-full w-full object-cover"
+                                  />
+                                </div>
+                                <div className="space-y-2 p-3">
+                                  <h4 className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">
+                                    {story.editorialTitleEN || "İnceleme Gerekli"}
+                                  </h4>
+                                  <p className="line-clamp-3 text-xs leading-5 text-muted">
+                                    {story.editorialSummaryEN || "Bu haber için görünür özet üretilemedi."}
+                                  </p>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+                                      {story.sourceName}
+                                    </span>
+                                    <span className={storyStatusClasses(story.publishable)}>
+                                      {story.publishable ? "Hazır" : "İnceleme Gerekli"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </article>
+                          ))}
                         </div>
-                        <h4 className="text-3xl font-semibold leading-tight tracking-tight text-foreground">
-                          {heroStory?.editorialTitleEN || "Needs Review"}
-                        </h4>
-                        <p className="text-base leading-7 text-foreground/85">
-                          {heroStory?.editorialContextEN ||
-                            "This story is awaiting approved English editorial output."}
-                        </p>
-                      </div>
-
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        {collageStories.map((story) => (
-                          <article
-                            key={story.id}
-                            className="overflow-hidden rounded-[22px] border border-[#d8c9b6] bg-[#fff9f1]"
-                          >
-                            <div className="grid grid-cols-[96px_1fr]">
-                              <div className="min-h-[112px] border-r border-[#d8c9b6]">
-                                <SafeStoryImage
-                                  src={story.imageUrl}
-                                  alt={story.visualHeadlineEN || "Editorial story image"}
-                                  className="h-full w-full object-cover"
-                                />
-                              </div>
-                              <div className="space-y-2 p-3">
-                                <p className="line-clamp-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
-                                  {story.visualHeadlineEN || "REVIEW REQUIRED"}
-                                </p>
-                                <h5 className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">
-                                  {story.editorialTitleEN || "Needs Review"}
-                                </h5>
-                                <p className="line-clamp-1 text-xs text-muted">{story.sourceName}</p>
-                                <span className={storyStatusClasses(story.publishable)}>
-                                  {story.publishable ? "Ready" : "Needs Review"}
-                                </span>
-                              </div>
-                            </div>
-                          </article>
-                        ))}
-                      </div>
+                      ) : (
+                        <div className="rounded-[24px] border border-[#d8c9b6] bg-[#fff9f1] p-5 text-sm text-muted">
+                          Tek haber seçildiğinde kolaj bu ana görsel üzerinden tekli kapak olarak kalır.
+                        </div>
+                      )}
                     </section>
                   </div>
 
                   <div className="border-t border-black/15 bg-[#6a1d19] p-5">
-                    <div className="mb-4 flex items-center gap-3">
-                      <img
-                        src="/march19-platform-logo.svg"
-                        alt="March 19 Platform logo"
-                        className="h-10 w-10 rounded-full border border-white/25 bg-white/95 p-1"
-                      />
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
-                          Front Page Story Strip
-                        </p>
-                        <p className="text-sm text-white/85">
-                          Every homepage item below keeps a visible image, headline, and short English
-                          deck in one collage surface.
-                        </p>
-                      </div>
-                    </div>
                     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                       {collageFeed.map((story) => (
                         <article
                           key={`${story.id}-front-page`}
                           className="overflow-hidden rounded-[24px] border border-white/15 bg-[#fff7eb]"
                         >
-                          <div className="grid grid-cols-[120px_1fr]">
-                            <div className="min-h-[128px] border-r border-[#d8c9b6] bg-[#eaddcb]">
+                          <div className="grid grid-cols-[124px_1fr]">
+                            <div className="min-h-[136px] border-r border-[#d8c9b6] bg-[#eaddcb]">
                               <SafeStoryImage
                                 src={story.imageUrl}
-                                alt={story.visualHeadlineEN || "Editorial story image"}
+                                alt={story.editorialTitleEN || "Haber görseli"}
                                 className="h-full w-full object-cover"
                               />
                             </div>
                             <div className="space-y-2 p-4">
-                              <p className="line-clamp-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
-                                {story.visualHeadlineEN || "REVIEW REQUIRED"}
-                              </p>
                               <h5 className="line-clamp-2 text-base font-semibold leading-tight text-foreground">
-                                {story.editorialTitleEN || "Needs Review"}
+                                {story.editorialTitleEN || "İnceleme Gerekli"}
                               </h5>
-                              <p className="line-clamp-2 text-xs leading-5 text-muted">
-                                {story.editorialSummaryEN ||
-                                  "This story is awaiting approved English editorial output."}
+                              <p className="line-clamp-3 text-xs leading-5 text-muted">
+                                {story.editorialSummaryEN || "Bu haber için görünür özet üretilemedi."}
                               </p>
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
                                   {story.sourceName}
                                 </span>
                                 <span className={storyStatusClasses(story.publishable)}>
-                                  {story.publishable ? "Ready" : "Needs Review"}
+                                  {story.publishable ? "Hazır" : "İnceleme Gerekli"}
                                 </span>
                               </div>
                             </div>
@@ -628,14 +693,14 @@ export default function Home() {
                           <div className="flex items-center gap-3">
                             <img
                               src="/march19-platform-logo.svg"
-                              alt="March 19 Platform logo"
+                              alt="March 19 Platform logosu"
                               className="h-10 w-10 rounded-full border border-border bg-white p-1"
                             />
-                            <div>
-                              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
-                                Single Story Page
-                              </p>
-                              <p className="text-xs text-muted">Editorial asset preview</p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-sm font-semibold text-foreground">{story.sourceName}</span>
+                              <span className={storyStatusClasses(story.publishable)}>
+                                {story.publishable ? "Hazır" : "İnceleme Gerekli"}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -644,37 +709,21 @@ export default function Home() {
                             <div className="relative aspect-[16/9]">
                               <SafeStoryImage
                                 src={story.imageUrl}
-                                alt={story.visualHeadlineEN || "Editorial story image"}
+                                alt={story.editorialTitleEN || "Haber görseli"}
                                 className="h-full w-full object-cover"
                               />
                             </div>
                           </div>
                           <div className="mt-5 space-y-3">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <StoryBadge>{story.sourceName}</StoryBadge>
-                              {story.publishable ? (
-                                <StoryBadge tone="success">Ready</StoryBadge>
-                              ) : (
-                                <StoryBadge tone="warning">Needs Review</StoryBadge>
-                              )}
-                            </div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
-                              {story.visualHeadlineEN || "REVIEW REQUIRED"}
-                            </p>
                             <h4 className="text-2xl font-semibold tracking-tight text-foreground">
-                              {story.editorialTitleEN || "Needs Review"}
+                              {story.editorialTitleEN || "İnceleme Gerekli"}
                             </h4>
                             <p className="text-base leading-7 text-foreground/85">
-                              {story.editorialSummaryEN ||
-                                "This story is awaiting approved English editorial output."}
+                              {story.editorialSummaryEN || "Bu haber için görünür özet üretilemedi."}
                             </p>
                             <div className="rounded-[22px] border border-border bg-panel p-4">
-                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-                                Editorial Context
-                              </p>
-                              <p className="mt-2 text-sm leading-6 text-muted">
-                                {story.editorialContextEN ||
-                                  "This item is being held in the internal review queue."}
+                              <p className="text-sm leading-6 text-muted">
+                                {story.editorialContextEN || "Bu haber iç inceleme kuyruğunda tutuluyor."}
                               </p>
                             </div>
                             <div className="text-xs uppercase tracking-[0.18em] text-muted">
@@ -690,7 +739,7 @@ export default function Home() {
                       onClick={() =>
                         void downloadNodeAsPng(
                           storyPreviewRefs.current[story.id],
-                          `${story.id}-story-page.png`,
+                          `${story.id}-haber-gorseli.png`,
                         )
                       }
                       disabled={downloadStatus === "loading"}

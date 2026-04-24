@@ -22,6 +22,10 @@ function normalizeText(value: string) {
     .trim();
 }
 
+function hasSignal(normalized: string, keywords: string[]) {
+  return keywords.some((keyword) => normalized.includes(normalizeText(keyword)));
+}
+
 function unique(values: string[]) {
   return [...new Set(values)];
 }
@@ -35,11 +39,7 @@ function pickPhrase(values: string[], fallback: string) {
     return values[0]!;
   }
 
-  return `${values.slice(0, -1).join(", ")} and ${values.at(-1)}`;
-}
-
-function hasSignal(normalized: string, keywords: string[]) {
-  return keywords.some((keyword) => normalized.includes(normalizeText(keyword)));
+  return `${values.slice(0, -1).join(", ")} ve ${values.at(-1)}`;
 }
 
 export function detectEditorialTopic(
@@ -163,49 +163,79 @@ function detectActors(normalized: string) {
   const actors: string[] = [];
 
   if (normalized.includes("imamoglu") || normalized.includes("ekrem")) {
-    actors.push("Ekrem Imamoglu");
+    actors.push("Ekrem İmamoğlu");
   }
 
   if (normalized.includes("chp")) {
-    actors.push("the CHP");
+    actors.push("CHP");
   }
 
   if (normalized.includes("muhalefet")) {
-    actors.push("opposition figures");
+    actors.push("muhalefet aktörleri");
   }
 
   if (normalized.includes("gazeteci")) {
-    actors.push("journalists");
+    actors.push("gazeteciler");
   }
 
   if (normalized.includes("medya")) {
-    actors.push("media outlets");
+    actors.push("medya kuruluşları");
   }
 
   if (normalized.includes("belediye")) {
-    actors.push("municipal authorities");
+    actors.push("belediye yönetimi");
   }
 
   if (normalized.includes("baskan")) {
-    actors.push("elected mayors");
+    actors.push("seçilmiş belediye başkanları");
   }
 
   if (normalized.includes("ogrenci")) {
-    actors.push("students");
+    actors.push("öğrenciler");
   }
 
   if (normalized.includes("avukat")) {
-    actors.push("lawyers");
+    actors.push("avukatlar");
   }
 
   return unique(actors);
+}
+
+function detectInstitutions(normalized: string) {
+  const institutions: string[] = [];
+
+  if (normalized.includes("ibb") || normalized.includes("istanbul buyuksehir")) {
+    institutions.push("İBB yönetimi");
+  }
+
+  if (normalized.includes("mahkeme")) {
+    institutions.push("mahkeme süreci");
+  }
+
+  if (normalized.includes("savci")) {
+    institutions.push("savcılık");
+  }
+
+  if (normalized.includes("emniyet") || normalized.includes("polis")) {
+    institutions.push("emniyet birimleri");
+  }
+
+  if (normalized.includes("rtuk")) {
+    institutions.push("yayın denetim kurumları");
+  }
+
+  if (normalized.includes("belediye")) {
+    institutions.push("yerel yönetim kurumları");
+  }
+
+  return unique(institutions);
 }
 
 function detectLocations(normalized: string) {
   const locations: string[] = [];
 
   if (normalized.includes("istanbul")) {
-    locations.push("Istanbul");
+    locations.push("İstanbul");
   }
 
   if (normalized.includes("ankara")) {
@@ -213,118 +243,88 @@ function detectLocations(normalized: string) {
   }
 
   if (normalized.includes("izmir")) {
-    locations.push("Izmir");
+    locations.push("İzmir");
   }
 
   if (normalized.includes("turkiye") || normalized.includes("turkey")) {
-    locations.push("Turkey");
+    locations.push("Türkiye");
   }
 
   return unique(locations);
 }
 
-function detectInstitutions(normalized: string) {
-  const institutions: string[] = [];
-
-  if (normalized.includes("ibb") || normalized.includes("istanbul buyuksehir")) {
-    institutions.push("Istanbul metropolitan administration");
-  }
-
-  if (normalized.includes("belediye")) {
-    institutions.push("local government");
-  }
-
-  if (normalized.includes("mahkeme")) {
-    institutions.push("the courts");
-  }
-
-  if (normalized.includes("savci")) {
-    institutions.push("the prosecution");
-  }
-
-  if (normalized.includes("emniyet") || normalized.includes("polis")) {
-    institutions.push("police authorities");
-  }
-
-  if (normalized.includes("rtuk")) {
-    institutions.push("broadcast regulators");
-  }
-
-  return unique(institutions);
-}
-
 function detectAction(normalized: string) {
   if (hasSignal(normalized, ["gözaltı", "gozalti", "tutuklama"])) {
-    return "a detention and custody move";
+    return "gözaltı veya tutuklama adımı";
   }
 
   if (hasSignal(normalized, ["mahkeme", "dava", "iddianame"])) {
-    return "an active court and prosecution track";
+    return "mahkeme ve dava süreci";
   }
 
   if (hasSignal(normalized, ["soruşturma", "sorusturma", "fezleke"])) {
-    return "a fresh investigation step";
+    return "soruşturma ve hukuki baskı hattı";
   }
 
   if (hasSignal(normalized, ["protesto", "eylem", "miting", "yuruyus"])) {
-    return "a street-level protest response";
+    return "kamusal protesto ve toplumsal tepki";
   }
 
   if (hasSignal(normalized, ["polis müdahalesi", "polis mudahalesi", "yasak"])) {
-    return "a restriction and intervention pattern";
+    return "müdahale ve kısıtlama düzeni";
   }
 
   if (hasSignal(normalized, ["kayyum", "görevden alma", "gorevden alma"])) {
-    return "an intervention in elected local authority";
+    return "seçilmiş yerel yönetime müdahale";
   }
 
   if (hasSignal(normalized, ["basın", "basin", "medya", "gazeteci"])) {
-    return "pressure on public communication and reporting";
+    return "basın ve ifade alanında baskı";
   }
 
   if (hasSignal(normalized, ["seçim", "secim", "aday", "parti"])) {
-    return "pressure on political participation";
+    return "siyasal katılım üzerindeki baskı";
   }
 
-  return "an episode of political pressure";
+  return "politik baskı eksenli bir gelişme";
 }
 
 function buildTitle(topic: ReturnType<typeof detectEditorialTopic>) {
   switch (topic) {
     case "media_rights":
       return {
-        title: "Media pressure case enters editorial review",
-        headline: "MEDIA RIGHTS UNDER PRESSURE",
+        title: "Basın ve ifade özgürlüğü baskısı izleniyor",
+        headline: "BASIN ÜZERİNDE BASKI",
       };
     case "legal_pressure":
       return {
-        title: "Legal pressure case moves into editorial review",
-        headline: "LEGAL PRESSURE UNDER REVIEW",
+        title: "Hukuki baskı hattındaki gelişme izleniyor",
+        headline: "HUKUKİ BASKI İNCELEMEDE",
       };
     case "municipal_pressure":
       return {
-        title: "Municipal pressure case enters editorial review",
-        headline: "LOCAL DEMOCRACY UNDER PRESSURE",
+        title: "Yerel yönetime dönük baskı hattı izleniyor",
+        headline: "YEREL DEMOKRASİ BASKI ALTINDA",
       };
     case "protest_crackdown":
       return {
-        title: "Protest pressure case enters editorial review",
-        headline: "CIVIC ACTION UNDER PRESSURE",
+        title: "Protesto ve kamusal tepki hattı izleniyor",
+        headline: "KAMUSAL TEPKİ BASKI ALTINDA",
       };
     case "detention_arrest":
       return {
-        title: "Detention-related case enters editorial review",
-        headline: "DETENTION PRESSURE UNDER REVIEW",
+        title: "Gözaltı ve tutuklama hattı izleniyor",
+        headline: "GÖZALTI BASKISI İNCELEMEDE",
       };
     case "opposition_pressure":
       return {
-        title: "Opposition pressure case enters editorial review",
-        headline: "OPPOSITION PRESSURE UNDER REVIEW",
+        title: "Muhalefet üzerindeki baskı hattı izleniyor",
+        headline: "MUHALEFET ÜZERİNDE BASKI",
       };
     default:
       return {
-        title: "Political pressure case enters editorial review",
-        headline: "POLITICAL PRESSURE UNDER REVIEW",
+        title: "Politik baskı hattındaki gelişme izleniyor",
+        headline: "POLİTİK BASKI İNCELEMEDE",
       };
   }
 }
@@ -336,38 +336,38 @@ function buildSummaryDetails(
   const actors = detectActors(normalized);
   const locations = detectLocations(normalized);
   const institutions = detectInstitutions(normalized);
-  const actorPhrase = pickPhrase(actors, "opposition actors");
-  const locationPhrase = locations.length > 0 ? ` in ${pickPhrase(locations, "Turkey")}` : "";
-  const institutionPhrase = pickPhrase(institutions, "state institutions");
+  const actorPhrase = pickPhrase(actors, "politik aktörler");
+  const locationPhrase = locations.length > 0 ? ` ${pickPhrase(locations, "Türkiye")} merkezli` : "";
+  const institutionPhrase = pickPhrase(institutions, "kurumsal güç odakları");
   const actionPhrase = detectAction(normalized);
   const titleDetails = buildTitle(topic);
 
   let context =
-    "This item remains relevant to the March 19 editorial workflow because it connects institutional pressure with the wider political monitoring frame.";
+    "Bu haber, 19 Mart sonrası siyasal baskı, kamusal haklar ve kurumsal müdahale hattını izleyen editoryal akış için önem taşıyor.";
 
   if (topic === "media_rights") {
     context =
-      "This item is relevant because pressure on journalists, publishers, and public communication can directly narrow civic visibility around the March 19 process.";
+      "Bu haber, medya görünürlüğü ve ifade özgürlüğü üzerindeki baskının kamusal tartışmayı nasıl daralttığını izlemek açısından önem taşıyor.";
   } else if (topic === "legal_pressure") {
     context =
-      "This item is relevant because investigations, indictments, and court proceedings are core indicators of political pressure in the monitored editorial frame.";
+      "Bu haber, soruşturma, dava ve mahkeme süreçlerinin siyasal alan üzerindeki etkisini takip etmek açısından önem taşıyor.";
   } else if (topic === "municipal_pressure") {
     context =
-      "This item is relevant because pressure on municipalities and elected local offices is part of the wider democratic and institutional risk landscape.";
+      "Bu haber, seçilmiş yerel yönetimlere dönük müdahalenin demokratik temsil üzerindeki etkisini izlemek açısından önem taşıyor.";
   } else if (topic === "protest_crackdown") {
     context =
-      "This item is relevant because protest restrictions and assembly pressure are direct signals of civic rights strain in the broader political environment.";
+      "Bu haber, kamusal gösteri, protesto hakkı ve müdahale pratiklerinin siyasal iklimi nasıl şekillendirdiğini izlemek açısından önem taşıyor.";
   } else if (topic === "detention_arrest") {
     context =
-      "This item is relevant because detention and arrest activity can mark a sharper phase of political or legal pressure inside the monitored process.";
+      "Bu haber, gözaltı ve tutuklama adımlarının politik ve hukuki baskının sertleşen evrelerine işaret edip etmediğini görmek açısından önem taşıyor.";
   } else if (topic === "opposition_pressure") {
     context =
-      "This item is relevant because pressure on opposition actors remains one of the central editorial categories tracked by this panel.";
+      "Bu haber, muhalefet aktörleri, seçim süreci ve siyasal katılım üzerindeki baskıyı takip etmek açısından önem taşıyor.";
   }
 
   return {
     ...titleDetails,
-    summary: `${actorPhrase} are featured in a Turkish report about ${actionPhrase}${locationPhrase}. The article indicates that ${institutionPhrase} are shaping the case or confrontation, rather than describing an ordinary civic or municipal update.`,
+    summary: `${actorPhrase},${locationPhrase} ${actionPhrase} eksenindeki bir haberin odağında yer alıyor. Metin, sıradan bir idari gelişmeden çok ${institutionPhrase} üzerinden şekillenen politik bir baskı veya müdahale çizgisine işaret ediyor.`,
     context,
   };
 }
