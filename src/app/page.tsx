@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-import { FALLBACK_EDITORIAL_IMAGE } from "@/lib/articles/images";
+import { HomepageCollagePreview } from "@/components/HomepageCollagePreview";
+import { SafeStoryImage } from "@/components/SafeStoryImage";
+import { StoryPreviewCard } from "@/components/StoryPreviewCard";
 import type { FinalStory } from "@/lib/articles/types";
 
 type AsyncStatus = "idle" | "loading" | "success" | "error";
@@ -62,31 +64,6 @@ function StoryBadge({
     >
       {children}
     </span>
-  );
-}
-
-function SafeStoryImage({
-  src,
-  alt,
-  className,
-}: {
-  src: string;
-  alt: string;
-  className: string;
-}) {
-  const [imageSrc, setImageSrc] = useState(src || FALLBACK_EDITORIAL_IMAGE);
-
-  useEffect(() => {
-    setImageSrc(src || FALLBACK_EDITORIAL_IMAGE);
-  }, [src]);
-
-  return (
-    <img
-      src={imageSrc || FALLBACK_EDITORIAL_IMAGE}
-      alt={alt || "Editorial story image"}
-      className={className}
-      onError={() => setImageSrc(FALLBACK_EDITORIAL_IMAGE)}
-    />
   );
 }
 
@@ -161,125 +138,6 @@ function StoryRow({
               {actionLabel}
             </button>
           </div>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function PreviewCard({ story }: { story?: FinalStory }) {
-  if (!story) {
-    return (
-      <div className="rounded-[32px] border border-dashed border-border bg-panel p-8 text-sm text-muted">
-        Select stories to populate the collage and single-story preview area.
-      </div>
-    );
-  }
-
-  return (
-    <article className="overflow-hidden rounded-[32px] border border-border bg-panel-strong shadow-[0_14px_40px_rgba(72,50,33,0.08)]">
-      <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="relative min-h-[320px] bg-panel">
-          <SafeStoryImage
-            src={story.imageUrl}
-            alt={story.visualHeadlineEN || "Editorial story image"}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(36,31,26,0.78)] to-transparent p-6 text-white">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/80">
-              Main Cover Preview
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight">
-              {story.visualHeadlineEN || story.editorialTitleEN || "Needs Review"}
-            </h2>
-          </div>
-        </div>
-        <div className="flex flex-col justify-between gap-6 p-6">
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              <StoryBadge>{story.sourceName}</StoryBadge>
-              {story.publishable ? (
-                <StoryBadge tone="success">Ready</StoryBadge>
-              ) : (
-                <StoryBadge tone="warning">Needs Review</StoryBadge>
-              )}
-            </div>
-            <h3 className="text-3xl font-semibold tracking-tight text-foreground">
-              {story.editorialTitleEN || "Needs Review"}
-            </h3>
-            <p className="text-base leading-7 text-foreground/85">
-              {story.editorialSummaryEN ||
-                "This story is awaiting approved English summary output."}
-            </p>
-            <div className="rounded-[24px] border border-border bg-panel p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-                Editorial Context
-              </p>
-              <p className="mt-2 text-sm leading-6 text-muted">
-                {story.editorialContextEN ||
-                  "This story remains in the internal editorial review queue."}
-              </p>
-            </div>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-[20px] border border-border bg-panel p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-                Visual Headline
-              </p>
-              <p className="mt-2 text-sm font-semibold text-foreground">
-                {story.visualHeadlineEN || "REVIEW REQUIRED"}
-              </p>
-            </div>
-            <div className="rounded-[20px] border border-border bg-panel p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-                Source
-              </p>
-              <a
-                href={story.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-2 block text-sm text-foreground underline decoration-border underline-offset-4"
-              >
-                {story.sourceName}
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function SmallPreviewCard({ story }: { story: FinalStory }) {
-  return (
-    <article className="rounded-[24px] border border-border bg-panel-strong p-3 shadow-[0_8px_24px_rgba(72,50,33,0.05)]">
-      <div className="relative mb-3 aspect-[16/10] overflow-hidden rounded-[18px] border border-border bg-panel">
-        <SafeStoryImage
-          src={story.imageUrl}
-          alt={story.visualHeadlineEN || "Editorial story image"}
-          className="h-full w-full object-cover"
-        />
-      </div>
-      <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
-          {story.visualHeadlineEN || "REVIEW REQUIRED"}
-        </p>
-        <h3 className="line-clamp-2 text-sm font-semibold text-foreground">
-          {story.editorialTitleEN || "Needs Review"}
-        </h3>
-        <p className="line-clamp-3 text-sm leading-6 text-muted">
-          {story.editorialSummaryEN ||
-            "This story is awaiting approved English editorial output."}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {story.publishable ? (
-            <StoryBadge tone="success">Ready</StoryBadge>
-          ) : (
-            <StoryBadge tone="warning">Needs Review</StoryBadge>
-          )}
-          {story.imageStatus === "fallback" ? (
-            <StoryBadge tone="muted">Fallback Image</StoryBadge>
-          ) : null}
         </div>
       </div>
     </article>
@@ -399,8 +257,6 @@ export default function Home() {
   function removeSelectedStory(story: FinalStory) {
     setSelectedStories((stories) => stories.filter((item) => item.id !== story.id));
   }
-
-  const previewStory = selectedStories[0];
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
@@ -548,15 +404,15 @@ export default function Home() {
               Kolaj ve tekil haber görselleri
             </h2>
             <p className="text-sm text-muted">
-              Preview-safe cards built only from final story fields.
+              Homepage collage preview plus individual story assets built only from final story fields.
             </p>
           </div>
           <div className="space-y-6">
-            <PreviewCard story={previewStory} />
+            <HomepageCollagePreview stories={selectedStories} />
             {selectedStories.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {selectedStories.map((story) => (
-                  <SmallPreviewCard key={story.id} story={story} />
+                  <StoryPreviewCard key={story.id} story={story} />
                 ))}
               </div>
             ) : null}
