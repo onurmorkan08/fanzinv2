@@ -250,35 +250,85 @@ export default function Home() {
   const collageRef = useRef<HTMLDivElement | null>(null);
   const storyPreviewRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  async function downloadNodeAsPng(node: HTMLElement | null, filename: string) {
+  async function renderNodeToBlob(node: HTMLElement | null) {
     if (!node) {
-      setDownloadStatus("error");
-      setDownloadMessage("No visual output was available to export.");
-      return;
+      throw new Error("No visual output was available to export.");
     }
 
+    const { toBlob } = await import("html-to-image");
+    const blob = await toBlob(node, {
+      cacheBust: true,
+      pixelRatio: 2,
+      backgroundColor: "#fcf8f1",
+    });
+
+    if (!blob) {
+      throw new Error("Image export returned an empty file.");
+    }
+
+    return blob;
+  }
+
+  function triggerBlobDownload(blob: Blob, filename: string) {
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  }
+
+  async function downloadNodeAsPng(node: HTMLElement | null, filename: string) {
     setDownloadStatus("loading");
     setDownloadMessage("Preparing PNG export...");
 
     try {
-      const { toPng } = await import("html-to-image");
-      const dataUrl = await toPng(node, {
-        cacheBust: true,
-        pixelRatio: 2,
-        backgroundColor: "#fcf8f1",
-      });
-
-      const link = document.createElement("a");
-      link.download = filename;
-      link.href = dataUrl;
-      link.click();
-
+      const blob = await renderNodeToBlob(node);
+      triggerBlobDownload(blob, filename);
       setDownloadStatus("success");
       setDownloadMessage(`${filename} downloaded.`);
     } catch (error) {
       setDownloadStatus("error");
       setDownloadMessage(
         error instanceof Error ? error.message : "Visual export failed.",
+      );
+    }
+  }
+
+  async function downloadAllPosts() {
+    if (collageFeed.length === 0) {
+      setDownloadStatus("error");
+      setDownloadMessage("No selected stories were available to export.");
+      return;
+    }
+
+    setDownloadStatus("loading");
+    setDownloadMessage("Preparing ZIP export...");
+
+    try {
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+
+      for (const story of collageFeed) {
+        const blob = await renderNodeToBlob(storyPreviewRefs.current[story.id]);
+        zip.file(`${story.id}-instagram-post.png`, blob);
+      }
+
+      if (collageRef.current) {
+        const collageBlob = await renderNodeToBlob(collageRef.current);
+        zip.file("fanzin-homepage-collage.png", collageBlob);
+      }
+
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      triggerBlobDownload(zipBlob, "fanzin-instagram-posts.zip");
+      setDownloadStatus("success");
+      setDownloadMessage("ZIP export downloaded.");
+    } catch (error) {
+      setDownloadStatus("error");
+      setDownloadMessage(
+        error instanceof Error ? error.message : "Bulk export failed.",
       );
     }
   }
@@ -602,16 +652,26 @@ export default function Home() {
                 Every output below is sized as an Instagram post and uses English editorial text only.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() =>
-                void downloadNodeAsPng(collageRef.current, "fanzin-homepage-collage.png")
-              }
-              disabled={downloadStatus === "loading" || collageFeed.length === 0}
-              className="rounded-full border border-accent bg-accent px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#741712] disabled:cursor-wait disabled:opacity-70"
-            >
-              {downloadStatus === "loading" ? "Downloading..." : "Download Collage"}
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() =>
+                  void downloadNodeAsPng(collageRef.current, "fanzin-homepage-collage.png")
+                }
+                disabled={downloadStatus === "loading" || collageFeed.length === 0}
+                className="rounded-full border border-accent bg-accent px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#741712] disabled:cursor-wait disabled:opacity-70"
+              >
+                {downloadStatus === "loading" ? "Downloading..." : "Download Collage"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void downloadAllPosts()}
+                disabled={downloadStatus === "loading" || collageFeed.length === 0}
+                className="rounded-full border border-border bg-panel px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-[#efe6d9] disabled:cursor-wait disabled:opacity-70"
+              >
+                {downloadStatus === "loading" ? "Preparing..." : "Download All Posts"}
+              </button>
+            </div>
           </div>
 
           {collageFeed.length === 0 ? (
@@ -768,12 +828,6 @@ export default function Home() {
                                 {story.editorialSummaryEN ||
                                   "This story is awaiting approved English editorial output."}
                               </p>
-                              <div className="rounded-[22px] border border-border bg-panel p-4">
-                                <p className="line-clamp-6 text-sm leading-6 text-muted">
-                                  {story.editorialContextEN ||
-                                    "This item is being held in the internal review queue."}
-                                </p>
-                              </div>
                               <div className="text-xs uppercase tracking-[0.18em] text-muted">
                                 {formatPublishedAt(story.publishedAt)}
                               </div>
