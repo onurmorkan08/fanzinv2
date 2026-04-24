@@ -39,12 +39,12 @@ export function detectEditorialTopic(
 
   if (
     hasAny([
-      "gözaltı",
+      "g\u00f6zalt\u0131",
       "gozalti",
       "tutuklama",
       "operasyon",
       "emniyet",
-      "serbest bırakıldı",
+      "serbest b\u0131rak\u0131ld\u0131",
       "serbest birakildi",
     ])
   ) {
@@ -54,13 +54,13 @@ export function detectEditorialTopic(
   if (
     hasAny([
       "dava",
-      "soruşturma",
+      "soru\u015fturma",
       "sorusturma",
       "iddianame",
       "mahkeme",
-      "savcı",
+      "savc\u0131",
       "savci",
-      "yargı",
+      "yarg\u0131",
       "yargi",
       "fezleke",
       "ceza",
@@ -74,10 +74,10 @@ export function detectEditorialTopic(
     hasAny([
       "protesto",
       "eylem",
-      "yürüyüş",
+      "y\u00fcr\u00fcy\u00fc\u015f",
       "yuruyus",
       "miting",
-      "polis müdahalesi",
+      "polis m\u00fcdahalesi",
       "polis mudahalesi",
       "yasak",
       "meydan",
@@ -88,17 +88,17 @@ export function detectEditorialTopic(
 
   if (
     hasAny([
-      "basın",
+      "bas\u0131n",
       "basin",
       "medya",
       "gazeteci",
-      "ifade özgürlüğü",
+      "ifade \u00f6zg\u00fcrl\u00fc\u011f\u00fc",
       "ifade ozgurlugu",
-      "yayın",
+      "yay\u0131n",
       "yayin",
-      "sansür",
+      "sans\u00fcr",
       "sansur",
-      "erişim engeli",
+      "eri\u015fim engeli",
       "erisim engeli",
     ])
   ) {
@@ -108,14 +108,14 @@ export function detectEditorialTopic(
   if (
     hasAny([
       "belediye",
-      "başkan",
+      "ba\u015fkan",
       "baskan",
-      "görevden alma",
+      "g\u00f6revden alma",
       "gorevden alma",
       "kayyum",
       "ihale",
       "belediye meclisi",
-      "yerel yönetim",
+      "yerel y\u00f6netim",
       "yerel yonetim",
     ])
   ) {
@@ -127,12 +127,12 @@ export function detectEditorialTopic(
       "chp",
       "muhalefet",
       "parti",
-      "siyasi baskı",
+      "siyasi bask\u0131",
       "siyasi baski",
       "aday",
-      "seçim",
+      "se\u00e7im",
       "secim",
-      "imamoğlu",
+      "imamo\u011flu",
       "imamoglu",
     ])
   ) {

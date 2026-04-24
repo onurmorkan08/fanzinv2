@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import { HomepageCollagePreview } from "@/components/HomepageCollagePreview";
 import { SafeStoryImage } from "@/components/SafeStoryImage";
 import { StoryPreviewCard } from "@/components/StoryPreviewCard";
 import type { FinalStory } from "@/lib/articles/types";
@@ -244,6 +243,9 @@ export default function Home() {
     setSelectedStories((stories) => stories.filter((item) => item.id !== story.id));
   }
 
+  const heroStory = selectedStories[0];
+  const supportingStories = selectedStories.slice(1, 5);
+
   return (
     <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
@@ -386,16 +388,101 @@ export default function Home() {
               Homepage collage preview plus individual story assets built only from final story fields.
             </p>
           </div>
-          <div className="space-y-6">
-            <HomepageCollagePreview selectedStories={selectedStories} />
-            {selectedStories.length > 0 ? (
+
+          {selectedStories.length === 0 ? (
+            <div className="rounded-[32px] border border-dashed border-border bg-panel p-8 text-sm text-muted">
+              Select stories to populate the homepage collage preview.
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <article className="overflow-hidden rounded-[34px] border border-border bg-[#5b1816] shadow-[0_18px_44px_rgba(72,50,33,0.18)]">
+                <div className="grid gap-0 xl:grid-cols-[1.55fr_1fr]">
+                  <section className="relative min-h-[520px] overflow-hidden border-b border-black/20 xl:border-r xl:border-b-0">
+                    <SafeStoryImage
+                      src={heroStory?.imageUrl || ""}
+                      alt={heroStory?.visualHeadlineEN || "Editorial story image"}
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,0.94)] via-[rgba(0,0,0,0.38)] to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 space-y-4 p-8 text-white sm:p-10">
+                      <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/75">
+                        MAIN COVER STORY
+                      </p>
+                      <h3 className="max-w-3xl text-4xl font-semibold uppercase leading-[1.02] tracking-[0.08em] sm:text-5xl">
+                        {heroStory?.visualHeadlineEN || "REVIEW REQUIRED"}
+                      </h3>
+                    </div>
+                  </section>
+
+                  <section className="flex flex-col gap-4 bg-[#f7efe4] p-5 sm:p-6">
+                    <div className="space-y-4 rounded-[26px] border border-[#d8c9b6] bg-[#fff9f1] p-5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center rounded-full border border-border bg-panel px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                          {heroStory?.sourceName || "Editorial Source"}
+                        </span>
+                        <span
+                          className={
+                            heroStory?.publishable
+                              ? "inline-flex items-center rounded-full border border-[#b9cfbf] bg-[#edf6ef] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#35543d]"
+                              : "inline-flex items-center rounded-full border border-accent/20 bg-accent-soft px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent"
+                          }
+                        >
+                          {heroStory?.publishable ? "Ready" : "Needs Review"}
+                        </span>
+                      </div>
+                      <h4 className="text-3xl font-semibold leading-tight tracking-tight text-foreground">
+                        {heroStory?.editorialTitleEN || "Needs Review"}
+                      </h4>
+                      <p className="text-base leading-7 text-foreground/85">
+                        {heroStory?.editorialSummaryEN ||
+                          "This story is awaiting approved English editorial output."}
+                      </p>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {supportingStories.map((story) => (
+                        <article
+                          key={story.id}
+                          className="overflow-hidden rounded-[22px] border border-[#d8c9b6] bg-[#fff9f1]"
+                        >
+                          <div className="grid grid-cols-[92px_1fr]">
+                            <div className="min-h-[104px]">
+                              <SafeStoryImage
+                                src={story.imageUrl}
+                                alt={story.visualHeadlineEN || "Editorial story image"}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                            <div className="space-y-2 p-3">
+                              <p className="line-clamp-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
+                                {story.visualHeadlineEN || "REVIEW REQUIRED"}
+                              </p>
+                              <p className="line-clamp-1 text-xs text-muted">{story.sourceName}</p>
+                              <span
+                                className={
+                                  story.publishable
+                                    ? "inline-flex items-center rounded-full border border-[#b9cfbf] bg-[#edf6ef] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#35543d]"
+                                    : "inline-flex items-center rounded-full border border-accent/20 bg-accent-soft px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent"
+                                }
+                              >
+                                {story.publishable ? "Ready" : "Needs Review"}
+                              </span>
+                            </div>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+              </article>
+
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {selectedStories.map((story) => (
                   <StoryPreviewCard key={story.id} story={story} />
                 ))}
               </div>
-            ) : null}
-          </div>
+            </div>
+          )}
         </section>
       </div>
     </main>
