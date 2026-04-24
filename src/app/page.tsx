@@ -702,7 +702,7 @@ export default function Home() {
                   </div>
 
                   <div className="aspect-square overflow-hidden">
-                    <div className="grid h-full grid-rows-[1.15fr_0.85fr]">
+                    <div className="flex h-full flex-col">
                       <section className="relative overflow-hidden border-b border-black/20">
                         <SafeStoryImage
                           src={heroStory?.imageUrl || ""}
@@ -735,9 +735,9 @@ export default function Home() {
                         </div>
                       </section>
 
-                      <section className="overflow-hidden bg-[#f7efe4] p-5 sm:p-6">
+                      <section className="flex-1 overflow-hidden bg-[#f7efe4] p-5 sm:p-6">
                         {collageStories.length > 0 ? (
-                          <div className="grid h-full auto-rows-fr gap-3 md:grid-cols-2 xl:grid-cols-3">
+                          <div className="grid auto-rows-auto gap-3 md:grid-cols-2 xl:grid-cols-3">
                             {collageStories.map((story) => (
                               <article
                                 key={story.id}
@@ -751,7 +751,7 @@ export default function Home() {
                                       className="h-full w-full object-contain"
                                     />
                                   </div>
-                                  <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
+                                  <div className="flex flex-col gap-2 p-3">
                                     <h4 className="text-sm font-semibold leading-5 text-foreground">
                                       {story.editorialTitleEN || "Needs Review"}
                                     </h4>
@@ -759,7 +759,7 @@ export default function Home() {
                                       {story.editorialSummaryEN ||
                                         "This story is awaiting approved English editorial output."}
                                     </p>
-                                    <div className="mt-auto flex flex-wrap items-center gap-2">
+                                    <div className="flex flex-wrap items-center gap-2 pt-1">
                                       <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
                                         {story.sourceName}
                                       </span>
@@ -810,8 +810,8 @@ export default function Home() {
                           </div>
                         </div>
                         <div className="aspect-square p-5">
-                          <div className="grid h-full grid-rows-[0.95fr_1fr] gap-5">
-                            <div className="overflow-hidden rounded-[22px] border border-border bg-[#efe3d2]">
+                          <div className="flex h-full flex-col gap-4">
+                            <div className="min-h-0 flex-[0_0_54%] overflow-hidden rounded-[22px] border border-border bg-[#efe3d2]">
                               <div className="relative h-full">
                                 <SafeStoryImage
                                   src={story.imageUrl}
@@ -820,15 +820,15 @@ export default function Home() {
                                 />
                               </div>
                             </div>
-                            <div className="min-h-0 space-y-3 overflow-hidden">
+                            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
                               <h4 className="text-2xl font-semibold tracking-tight text-foreground">
                                 {story.editorialTitleEN || "Needs Review"}
                               </h4>
-                              <p className="text-base leading-7 text-foreground/85">
+                              <p className="line-clamp-5 text-base leading-7 text-foreground/85">
                                 {story.editorialSummaryEN ||
                                   "This story is awaiting approved English editorial output."}
                               </p>
-                              <div className="text-xs uppercase tracking-[0.18em] text-muted">
+                              <div className="pt-1 text-xs uppercase tracking-[0.18em] text-muted">
                                 {formatPublishedAt(story.publishedAt)}
                               </div>
                             </div>
