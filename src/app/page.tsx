@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { SafeStoryImage } from "@/components/SafeStoryImage";
+import { normalizeSourceName } from "@/lib/articles/source";
 import type { FinalStory } from "@/lib/articles/types";
 
 type AsyncStatus = "idle" | "loading" | "success" | "error";
@@ -28,6 +29,37 @@ function formatPublishedAt(value?: string) {
   }).format(new Date(value));
 }
 
+function formatVisualDate(value?: string) {
+  if (!value) {
+    return "Tarih yok";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function getVisualSourceLabel(story: FinalStory) {
+  if (story.imageStatus === "fallback") {
+    return "Fallback Visual";
+  }
+
+  try {
+    const imageUrl = new URL(story.imageUrl, story.sourceUrl);
+    const storyUrl = new URL(story.sourceUrl);
+    const imageHost = imageUrl.hostname.replace(/^www\./, "");
+    const storyHost = storyUrl.hostname.replace(/^www\./, "");
+
+    return imageHost && imageHost !== storyHost
+      ? normalizeSourceName(imageUrl.toString())
+      : story.sourceName;
+  } catch {
+    return story.sourceName;
+  }
+}
+
 function formatImageStatus(status: FinalStory["imageStatus"]) {
   if (status === "found") {
     return "Bulundu";
@@ -38,12 +70,6 @@ function formatImageStatus(status: FinalStory["imageStatus"]) {
   }
 
   return "Eksik";
-}
-
-function storyStatusClasses(publishable: boolean) {
-  return publishable
-    ? "inline-flex items-center rounded-full border border-[#b9cfbf] bg-[#edf6ef] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#35543d]"
-    : "inline-flex items-center rounded-full border border-accent/20 bg-accent-soft px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent";
 }
 
 function StoryBadge({
@@ -591,24 +617,26 @@ export default function Home() {
               </div>
               <StoryBadge tone="muted">{candidateStories.length} stories</StoryBadge>
             </div>
-            <div className="flex flex-col gap-4">
-              {candidateStories.length > 0 ? (
-                candidateStories.map((story) => (
-                  <StoryRow
-                    key={story.id}
-                    story={story}
-                    actionLabel="Select"
-                    onAction={addSelectedStory}
-                    onFieldChange={updateStoryFields}
-                  />
-                ))
-              ) : (
-                <div className="rounded-[28px] border border-dashed border-border bg-panel p-8 text-sm text-muted">
-                  {candidatesStatus === "loading"
-                    ? "Source ingestion is running."
-                    : "No candidate stories are available yet."}
-                </div>
-              )}
+            <div className="max-h-[1760px] overflow-y-auto pr-2">
+              <div className="flex flex-col gap-4">
+                {candidateStories.length > 0 ? (
+                  candidateStories.map((story) => (
+                    <StoryRow
+                      key={story.id}
+                      story={story}
+                      actionLabel="Select"
+                      onAction={addSelectedStory}
+                      onFieldChange={updateStoryFields}
+                    />
+                  ))
+                ) : (
+                  <div className="rounded-[28px] border border-dashed border-border bg-panel p-8 text-sm text-muted">
+                    {candidatesStatus === "loading"
+                      ? "Source ingestion is running."
+                      : "No candidate stories are available yet."}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -717,9 +745,11 @@ export default function Home() {
                               alt="March 19 Platform logo"
                               className="h-12 w-12 rounded-full border border-white/30 bg-white p-1"
                             />
-                            <span className={storyStatusClasses(Boolean(heroStory?.publishable))}>
-                              {heroStory?.publishable ? "Ready" : "Needs Review"}
-                            </span>
+                            {heroStory ? (
+                              <span className="inline-flex items-center rounded-full border border-white/25 bg-black/35 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/85">
+                                {getVisualSourceLabel(heroStory)}
+                              </span>
+                            ) : null}
                           </div>
                           <h3 className="max-w-3xl text-4xl font-semibold leading-[1.02] tracking-tight sm:text-5xl">
                             {heroStory?.editorialTitleEN || "Needs Review"}
@@ -745,11 +775,16 @@ export default function Home() {
                               >
                                 <div className="flex h-full flex-col">
                                   <div className="h-32 border-b border-[#d8c9b6] bg-[#efe3d2]">
-                                    <SafeStoryImage
-                                      src={story.imageUrl}
-                                      alt={story.editorialTitleEN || "Editorial story image"}
-                                      className="h-full w-full object-contain"
-                                    />
+                                    <div className="relative h-full">
+                                      <SafeStoryImage
+                                        src={story.imageUrl}
+                                        alt={story.editorialTitleEN || "Editorial story image"}
+                                        className="h-full w-full object-contain"
+                                      />
+                                      <span className="absolute bottom-2 left-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
+                                        {getVisualSourceLabel(story)}
+                                      </span>
+                                    </div>
                                   </div>
                                   <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
                                     <h4 className="text-sm font-semibold leading-5 text-foreground">
@@ -762,9 +797,6 @@ export default function Home() {
                                     <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
                                       <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
                                         {story.sourceName}
-                                      </span>
-                                      <span className={storyStatusClasses(story.publishable)}>
-                                        {story.publishable ? "Ready" : "Needs Review"}
                                       </span>
                                     </div>
                                   </div>
@@ -803,9 +835,6 @@ export default function Home() {
                               <span className="text-sm font-semibold text-foreground">
                                 {story.sourceName}
                               </span>
-                              <span className={storyStatusClasses(story.publishable)}>
-                                {story.publishable ? "Ready" : "Needs Review"}
-                              </span>
                             </div>
                           </div>
                         </div>
@@ -818,6 +847,9 @@ export default function Home() {
                                   alt={story.editorialTitleEN || "Editorial story image"}
                                   className="h-full w-full object-contain"
                                 />
+                                <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
+                                  {getVisualSourceLabel(story)}
+                                </span>
                               </div>
                             </div>
                             <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
@@ -829,7 +861,7 @@ export default function Home() {
                                   "This story is awaiting approved English editorial output."}
                               </p>
                               <div className="pt-1 text-xs uppercase tracking-[0.18em] text-muted">
-                                {formatPublishedAt(story.publishedAt)}
+                                {formatVisualDate(story.publishedAt)}
                               </div>
                             </div>
                           </div>

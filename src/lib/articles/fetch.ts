@@ -1,4 +1,10 @@
-import { extractArticleFromHtml, extractArticleLinksFromListing, inferSourceNameFromUrl } from "./extract";
+import {
+  createArticleId,
+  extractArticleFromHtml,
+  extractArticleLinksFromListing,
+  inferSourceNameFromUrl,
+} from "./extract";
+import { normalizeSourceName } from "./source";
 import type { RawArticle, SourceDefinition } from "./types";
 
 export const AUTO_SOURCES: SourceDefinition[] = [
@@ -27,17 +33,27 @@ export const AUTO_SOURCES: SourceDefinition[] = [
 ];
 
 async function fetchHtml(url: string) {
-  const response = await fetch(url, {
-    headers: {
-      "user-agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-      "accept-language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
-      accept: "text/html,application/xhtml+xml",
-    },
-    redirect: "follow",
-    cache: "no-store",
-    signal: AbortSignal.timeout(15000),
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      headers: {
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "accept-language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
+        accept: "text/html",
+      },
+      redirect: "follow",
+      cache: "no-store",
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? `Fetch failed: ${error.message}`
+        : "Fetch failed before a response was received.",
+    );
+  }
 
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`);
@@ -104,5 +120,21 @@ export async function fetchAutoRawArticles() {
 }
 
 export async function fetchManualRawArticle(url: string) {
-  return fetchArticle(url, "manual");
+  try {
+    return await fetchArticle(url, "manual");
+  } catch (error) {
+    return {
+      id: createArticleId(url),
+      sourceType: "manual",
+      sourceName: normalizeSourceName(url),
+      sourceUrl: url,
+      rawTitleTR: "",
+      rawBodyTR: "",
+      extractionStatus: "failed",
+      errorReason:
+        error instanceof Error
+          ? error.message
+          : "Manual article fetch failed before extraction could run.",
+    } satisfies RawArticle;
+  }
 }

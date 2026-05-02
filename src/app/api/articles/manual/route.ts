@@ -12,7 +12,13 @@ export async function POST(request: Request) {
       return Response.json({ error: "A manual link is required." }, { status: 400 });
     }
 
-    const parsedUrl = new URL(url);
+    let parsedUrl: URL;
+
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      return Response.json({ error: "Enter a valid manual article URL." }, { status: 400 });
+    }
 
     if (!/^https?:$/.test(parsedUrl.protocol)) {
       return Response.json(

@@ -1,19 +1,25 @@
 import type { FinalStory } from "@/lib/articles/types";
+import { normalizeSourceName } from "@/lib/articles/source";
 
 import { SafeStoryImage } from "./SafeStoryImage";
 
-function StatusBadge({ publishable }: { publishable: boolean }) {
-  return (
-    <span
-      className={
-        publishable
-          ? "inline-flex items-center rounded-full border border-[#b9cfbf] bg-[#edf6ef] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#35543d]"
-          : "inline-flex items-center rounded-full border border-accent/20 bg-accent-soft px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent"
-      }
-    >
-      {publishable ? "Ready" : "Needs Review"}
-    </span>
-  );
+function getVisualSourceLabel(story: FinalStory) {
+  if (story.imageStatus === "fallback") {
+    return "Fallback Visual";
+  }
+
+  try {
+    const imageUrl = new URL(story.imageUrl, story.sourceUrl);
+    const storyUrl = new URL(story.sourceUrl);
+    const imageHost = imageUrl.hostname.replace(/^www\./, "");
+    const storyHost = storyUrl.hostname.replace(/^www\./, "");
+
+    return imageHost && imageHost !== storyHost
+      ? normalizeSourceName(imageUrl.toString())
+      : story.sourceName;
+  } catch {
+    return story.sourceName;
+  }
 }
 
 function SupportingStoryBlock({ story }: { story: FinalStory }) {
@@ -21,18 +27,22 @@ function SupportingStoryBlock({ story }: { story: FinalStory }) {
     <article className="overflow-hidden rounded-[20px] border border-border bg-panel">
       <div className="grid grid-cols-[88px_1fr]">
         <div className="min-h-[88px]">
-          <SafeStoryImage
-            src={story.imageUrl}
-            alt={story.visualHeadlineEN || "Editorial story image"}
-            className="h-full w-full object-cover"
-          />
+          <div className="relative h-full">
+            <SafeStoryImage
+              src={story.imageUrl}
+              alt={story.visualHeadlineEN || "Editorial story image"}
+              className="h-full w-full object-cover"
+            />
+            <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/55 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-white">
+              {getVisualSourceLabel(story)}
+            </span>
+          </div>
         </div>
         <div className="space-y-2 p-3">
           <p className="line-clamp-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
             {story.visualHeadlineEN || "REVIEW REQUIRED"}
           </p>
           <p className="line-clamp-1 text-xs text-muted">{story.sourceName}</p>
-          <StatusBadge publishable={story.publishable} />
         </div>
       </div>
     </article>
@@ -64,6 +74,9 @@ export function HomepageCollagePreview({
             alt={hero.visualHeadlineEN || hero.editorialTitleEN || "Editorial story image"}
             className="absolute inset-0 h-full w-full object-cover"
           />
+          <span className="absolute left-6 top-6 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
+            {getVisualSourceLabel(hero)}
+          </span>
           <div className="absolute inset-x-0 bottom-0 space-y-3 bg-gradient-to-t from-[rgba(36,31,26,0.88)] via-[rgba(36,31,26,0.55)] to-transparent p-8 text-white">
             <p className="text-xs font-semibold uppercase tracking-[0.26em] text-white/80">
               MAIN COVER STORY
@@ -80,7 +93,6 @@ export function HomepageCollagePreview({
               <span className="inline-flex items-center rounded-full border border-border bg-panel-strong px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground">
                 {hero.sourceName}
               </span>
-              <StatusBadge publishable={hero.publishable} />
             </div>
             <h3 className="text-3xl font-semibold tracking-tight text-foreground">
               {hero.editorialTitleEN || "Needs Review"}

@@ -1,6 +1,38 @@
 import type { FinalStory } from "@/lib/articles/types";
+import { normalizeSourceName } from "@/lib/articles/source";
 
 import { SafeStoryImage } from "./SafeStoryImage";
+
+function formatVisualDate(value?: string) {
+  if (!value) {
+    return "Tarih yok";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function getVisualSourceLabel(story: FinalStory) {
+  if (story.imageStatus === "fallback") {
+    return "Fallback Visual";
+  }
+
+  try {
+    const imageUrl = new URL(story.imageUrl, story.sourceUrl);
+    const storyUrl = new URL(story.sourceUrl);
+    const imageHost = imageUrl.hostname.replace(/^www\./, "");
+    const storyHost = storyUrl.hostname.replace(/^www\./, "");
+
+    return imageHost && imageHost !== storyHost
+      ? normalizeSourceName(imageUrl.toString())
+      : story.sourceName;
+  } catch {
+    return story.sourceName;
+  }
+}
 
 export function StoryPreviewCard({ story }: { story: FinalStory }) {
   return (
@@ -11,6 +43,9 @@ export function StoryPreviewCard({ story }: { story: FinalStory }) {
           alt={story.visualHeadlineEN || "Editorial story image"}
           className="h-full w-full object-cover"
         />
+        <span className="absolute bottom-2 left-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
+          {getVisualSourceLabel(story)}
+        </span>
       </div>
       <div className="space-y-2.5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
@@ -27,14 +62,8 @@ export function StoryPreviewCard({ story }: { story: FinalStory }) {
           <span className="inline-flex items-center rounded-full border border-border bg-panel px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
             {story.sourceName}
           </span>
-          <span
-            className={
-              story.publishable
-                ? "inline-flex items-center rounded-full border border-[#b9cfbf] bg-[#edf6ef] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#35543d]"
-                : "inline-flex items-center rounded-full border border-accent/20 bg-accent-soft px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent"
-            }
-          >
-            {story.publishable ? "Ready" : "Needs Review"}
+          <span className="inline-flex items-center rounded-full border border-border bg-panel px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+            {formatVisualDate(story.publishedAt)}
           </span>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import type { ExtractionStatus, RawArticle, SourceType } from "./types";
+import { normalizeSourceName } from "./source";
 
 function normalizeWhitespace(value: string) {
   return value.replace(/\s+/g, " ").trim();
@@ -104,6 +105,31 @@ function parseJsonLdValue<T>(value: unknown, key: string): T | undefined {
   return undefined;
 }
 
+function normalizeJsonLdImage(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const image = normalizeJsonLdImage(entry);
+
+      if (image) {
+        return image;
+      }
+    }
+
+    return "";
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return normalizeJsonLdImage(record.url) || normalizeJsonLdImage(record.contentUrl);
+  }
+
+  return "";
+}
+
 function extractJsonLdData(html: string) {
   const blocks = getJsonLdBlocks(html);
 
@@ -111,17 +137,13 @@ function extractJsonLdData(html: string) {
     try {
       const parsed = JSON.parse(block) as unknown;
       const headline = parseJsonLdValue<string>(parsed, "headline");
-      const image = parseJsonLdValue<string | string[]>(parsed, "image");
+      const image = parseJsonLdValue<unknown>(parsed, "image");
       const datePublished = parseJsonLdValue<string>(parsed, "datePublished");
       const articleBody = parseJsonLdValue<string>(parsed, "articleBody");
 
       return {
         headline: typeof headline === "string" ? normalizeWhitespace(headline) : "",
-        image: Array.isArray(image)
-          ? image.find((entry) => typeof entry === "string") ?? ""
-          : typeof image === "string"
-            ? image
-            : "",
+        image: normalizeJsonLdImage(image),
         datePublished:
           typeof datePublished === "string" ? normalizeWhitespace(datePublished) : "",
         articleBody:
@@ -148,78 +170,118 @@ function absoluteUrl(candidate: string, baseUrl: string) {
   }
 }
 
+function isJunkParagraph(paragraph: string) {
+  const normalized = paragraph.toLocaleLowerCase("tr-TR");
+
+  if (paragraph.length < 28) {
+    return true;
+  }
+
+  return [
+    /^reklam$/,
+    /^advertisement$/,
+    /^ilgili haberler/,
+    /^etiketler/,
+    /^kaynak$/,
+    /^video$/,
+    /^galeri$/,
+    /^son dakika/,
+    /^abone ol/,
+    /^paylaş/,
+    /^share$/,
+    /^yorumlar/,
+    /^çerez/,
+    /^cookie/,
+    /^gizlilik/,
+    /^privacy/,
+    /^kullanım şartları/,
+    /^terms/,
+    /^copyright/,
+    /^tüm hakları saklıdır/,
+    /facebook'ta paylaş/,
+    /twitter'da paylaş/,
+    /whatsapp'ta paylaş/,
+    /javascript/,
+  ].some((pattern) => pattern.test(normalized));
+}
+
 function extractParagraphs(segment: string) {
   const matches = Array.from(segment.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi));
+  const seen = new Set<string>();
+  const paragraphs: string[] = [];
 
-  return matches
-    .map((match) => normalizeWhitespace(stripTags(match[1] ?? "")))
-    .filter((paragraph) => paragraph.length >= 28)
-    .filter(
-      (paragraph) =>
-        !/^(reklam|advertisement|ilgili haberler|etiketler|kaynak)/i.test(paragraph),
-    );
+  for (const match of matches) {
+    const paragraph = normalizeWhitespace(stripTags(match[1] ?? ""));
+    const fingerprint = paragraph.toLocaleLowerCase("tr-TR");
+
+    if (isJunkParagraph(paragraph) || seen.has(fingerprint)) {
+      continue;
+    }
+
+    seen.add(fingerprint);
+    paragraphs.push(paragraph);
+  }
+
+  return paragraphs;
 }
 
-function extractBlockText(segment: string) {
-  const matches = Array.from(
-    segment.matchAll(/<(?:div|span)\b[^>]*>([\s\S]*?)<\/(?:div|span)>/gi),
-  );
-
-  return matches
-    .map((match) => normalizeWhitespace(stripTags(match[1] ?? "")))
-    .filter((text) => text.length >= 60)
-    .filter(
-      (text) =>
-        !/^(reklam|advertisement|ilgili haberler|etiketler|kaynak|video|galeri)/i.test(
-          text,
-        ),
-    );
+function extractSegments(html: string, pattern: RegExp) {
+  return Array.from(html.matchAll(pattern))
+    .map((match) => match[1] ?? "")
+    .filter(Boolean);
 }
 
-function extractBodySegment(html: string) {
-  const patterns = [
-    /<article\b[^>]*>([\s\S]*?)<\/article>/i,
-    /<(?:div|section)\b[^>]+class=["'][^"']*(?:article-body|article__body|content-body|entry-content|news-content|post-content|article-content|detail-content|haber-icerik|haberMetni|story-body)[^"']*["'][^>]*>([\s\S]*?)<\/(?:div|section)>/i,
-    /<(?:div|section)\b[^>]+id=["'][^"']*(?:article|content|icerik|news-detail)[^"']*["'][^>]*>([\s\S]*?)<\/(?:div|section)>/i,
-  ];
+function extractParagraphsByPattern(html: string, pattern: RegExp) {
+  const paragraphs: string[] = [];
+  const seen = new Set<string>();
 
-  for (const pattern of patterns) {
-    const match = html.match(pattern);
+  for (const segment of extractSegments(html, pattern)) {
+    for (const paragraph of extractParagraphs(segment)) {
+      const fingerprint = paragraph.toLocaleLowerCase("tr-TR");
 
-    if (match?.[1]) {
-      return match[1];
+      if (seen.has(fingerprint)) {
+        continue;
+      }
+
+      seen.add(fingerprint);
+      paragraphs.push(paragraph);
     }
   }
 
-  return html;
+  return paragraphs;
 }
 
 function extractBodyText(html: string, jsonLdBody: string) {
-  if (jsonLdBody.length >= 180) {
-    return jsonLdBody;
+  const strategies = [
+    () => extractParagraphsByPattern(html, /<article\b[^>]*>([\s\S]*?)<\/article>/gi),
+    () => extractParagraphsByPattern(html, /<main\b[^>]*>([\s\S]*?)<\/main>/gi),
+    () =>
+      extractParagraphsByPattern(
+        html,
+        /<(?:article|main|section|div)\b[^>]+class=["'][^"']*article[^"']*["'][^>]*>([\s\S]*?)<\/(?:article|main|section|div)>/gi,
+      ),
+    () =>
+      extractParagraphsByPattern(
+        html,
+        /<(?:article|main|section|div)\b[^>]+class=["'][^"']*content[^"']*["'][^>]*>([\s\S]*?)<\/(?:article|main|section|div)>/gi,
+      ),
+    () =>
+      extractParagraphsByPattern(
+        html,
+        /<(?:article|main|section|div)\b[^>]+class=["'][^"']*news[^"']*["'][^>]*>([\s\S]*?)<\/(?:article|main|section|div)>/gi,
+      ),
+    () => extractParagraphs(html),
+  ];
+
+  for (const strategy of strategies) {
+    const body = normalizeWhitespace(strategy().join(" "));
+
+    if (body.length >= 120) {
+      return body;
+    }
   }
 
-  const segment = extractBodySegment(html);
-  const paragraphs = extractParagraphs(segment);
-
-  if (paragraphs.length > 0) {
-    return normalizeWhitespace(paragraphs.join(" "));
-  }
-
-  const blockText = extractBlockText(segment);
-
-  if (blockText.length > 0) {
-    return normalizeWhitespace(blockText.join(" "));
-  }
-
-  const fallbackParagraphs = extractParagraphs(html);
-
-  if (fallbackParagraphs.length > 0) {
-    return normalizeWhitespace(fallbackParagraphs.join(" "));
-  }
-
-  const fallbackBlocks = extractBlockText(html);
-  return normalizeWhitespace(fallbackBlocks.join(" "));
+  return jsonLdBody.length >= 120 ? jsonLdBody : normalizeWhitespace(extractParagraphs(html).join(" "));
 }
 
 function extractPublishedAt(html: string, jsonLdDatePublished: string) {
@@ -240,30 +302,48 @@ function extractTitle(html: string, jsonLdHeadline: string) {
   return (
     getMetaContent(html, "og:title") ||
     getMetaContent(html, "twitter:title") ||
-    jsonLdHeadline ||
     getTagContent(html, "h1") ||
-    getTagContent(html, "title")
+    getTagContent(html, "title") ||
+    jsonLdHeadline
   );
 }
 
 function extractImage(html: string, baseUrl: string, jsonLdImage: string) {
+  const articleSegment =
+    html.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)?.[1] ?? "";
+  const articleImage = articleSegment.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i)?.[1];
+  const largeContentImage = Array.from(html.matchAll(/<img\b[^>]*>/gi))
+    .map((match) => match[0])
+    .find((tag) => {
+      const width = Number(tag.match(/\bwidth=["']?(\d+)/i)?.[1] ?? 0);
+      const height = Number(tag.match(/\bheight=["']?(\d+)/i)?.[1] ?? 0);
+      const src = tag.match(/\bsrc=["']([^"']+)["']/i)?.[1] ?? "";
+      const classes = tag.match(/\bclass=["']([^"']+)["']/i)?.[1] ?? "";
+
+      return (
+        src &&
+        !/logo|icon|avatar|sprite|tracking|pixel/i.test(src + " " + classes) &&
+        (width >= 300 || height >= 180 || /content|article|news|hero|featured|image/i.test(classes))
+      );
+    })
+    ?.match(/\bsrc=["']([^"']+)["']/i)?.[1];
   const imageCandidate =
     getMetaContent(html, "og:image") ||
     getMetaContent(html, "twitter:image") ||
     jsonLdImage ||
-    html.match(/<figure[\s\S]*?<img[^>]+src=["']([^"']+)["'][^>]*>/i)?.[1] ||
-    html.match(/<img[^>]+class=["'][^"']*(?:hero|featured|article)[^"']*["'][^>]+src=["']([^"']+)["'][^>]*>/i)?.[1] ||
+    articleImage ||
+    largeContentImage ||
     "";
 
   return imageCandidate ? absoluteUrl(imageCandidate, baseUrl) : "";
 }
 
 function determineExtractionStatus(title: string, body: string): ExtractionStatus {
-  if (title && body.length >= 220) {
+  if (title && body.length >= 300) {
     return "success";
   }
 
-  if (title && body.length >= 80) {
+  if (title && body.length >= 120) {
     return "partial";
   }
 
@@ -271,14 +351,7 @@ function determineExtractionStatus(title: string, body: string): ExtractionStatu
 }
 
 export function inferSourceNameFromUrl(url: string) {
-  const hostname = new URL(url).hostname.replace(/^www\./, "");
-  const baseName = hostname.split(".")[0] ?? hostname;
-
-  return baseName
-    .split(/[-_]/g)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+  return normalizeSourceName(url);
 }
 
 export function createArticleId(url: string) {
