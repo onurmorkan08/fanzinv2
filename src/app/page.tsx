@@ -8,6 +8,9 @@ import type { FinalStory } from "@/lib/articles/types";
 
 type AsyncStatus = "idle" | "loading" | "success" | "error";
 
+const TRANSPARENT_IMAGE_PLACEHOLDER =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
 function addOrUpdateStoryById(stories: FinalStory[], story: FinalStory) {
   const existingIndex = stories.findIndex((item) => item.id === story.id);
 
@@ -70,6 +73,41 @@ function formatImageStatus(status: FinalStory["imageStatus"]) {
   }
 
   return "Eksik";
+}
+
+function getSafeExportFilename(value: string) {
+  return value
+    .trim()
+    .replace(/[^a-z0-9._-]+/gi, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+}
+
+async function waitForExportImages(node: HTMLElement) {
+  const images = Array.from(node.querySelectorAll("img"));
+
+  await Promise.all(
+    images.map(async (image) => {
+      if (image.complete) {
+        return;
+      }
+
+      try {
+        if (typeof image.decode === "function") {
+          await image.decode();
+          return;
+        }
+      } catch {
+        // SafeStoryImage swaps broken images to the local fallback; continue with that.
+      }
+
+      await new Promise<void>((resolve) => {
+        const finish = () => resolve();
+        image.addEventListener("load", finish, { once: true });
+        image.addEventListener("error", finish, { once: true });
+      });
+    }),
+  );
 }
 
 function StoryBadge({
@@ -281,11 +319,30 @@ export default function Home() {
       throw new Error("No visual output was available to export.");
     }
 
+    await waitForExportImages(node);
+
+    const exportWidth = Math.ceil(node.scrollWidth || node.getBoundingClientRect().width);
+    const exportHeight = Math.ceil(node.scrollHeight || node.getBoundingClientRect().height);
+
     const { toBlob } = await import("html-to-image");
     const blob = await toBlob(node, {
       cacheBust: true,
+      includeQueryParams: true,
+      skipFonts: true,
       pixelRatio: 2,
       backgroundColor: "#fcf8f1",
+      imagePlaceholder: TRANSPARENT_IMAGE_PLACEHOLDER,
+      fetchRequestInit: {
+        cache: "no-store",
+      },
+      style: {
+        margin: "0",
+        transform: "none",
+      },
+      width: exportWidth,
+      height: exportHeight,
+      canvasWidth: exportWidth * 2,
+      canvasHeight: exportHeight * 2,
     });
 
     if (!blob) {
@@ -339,7 +396,7 @@ export default function Home() {
 
       for (const story of collageFeed) {
         const blob = await renderNodeToBlob(storyPreviewRefs.current[story.id]);
-        zip.file(`${story.id}-instagram-post.png`, blob);
+        zip.file(`${getSafeExportFilename(story.id) || "story"}-instagram-post.png`, blob);
       }
 
       if (collageRef.current) {
@@ -393,7 +450,11 @@ export default function Home() {
 
   useEffect(() => {
     if (isUnlocked) {
-      void loadCandidates();
+      const timer = window.setTimeout(() => {
+        void loadCandidates();
+      }, 0);
+
+      return () => window.clearTimeout(timer);
     }
   }, [isUnlocked]);
 
@@ -874,7 +935,7 @@ export default function Home() {
                       onClick={() =>
                         void downloadNodeAsPng(
                           storyPreviewRefs.current[story.id],
-                          `${story.id}-instagram-post.png`,
+                          `${getSafeExportFilename(story.id) || "story"}-instagram-post.png`,
                         )
                       }
                       disabled={downloadStatus === "loading"}
