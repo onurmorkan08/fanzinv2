@@ -10,6 +10,8 @@ type AsyncStatus = "idle" | "loading" | "success" | "error";
 
 const TRANSPARENT_IMAGE_PLACEHOLDER =
   "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+const VISUAL_EXPORT_WIDTH = 1080;
+const VISUAL_EXPORT_HEIGHT = 1350;
 
 function addOrUpdateStoryById(stories: FinalStory[], story: FinalStory) {
   const existingIndex = stories.findIndex((item) => item.id === story.id);
@@ -32,18 +34,6 @@ function formatPublishedAt(value?: string) {
   }).format(new Date(value));
 }
 
-function formatVisualDate(value?: string) {
-  if (!value) {
-    return "Tarih yok";
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(value));
-}
-
 function getVisualSourceLabel(story: FinalStory) {
   if (story.imageStatus === "fallback") {
     return "Fallback Visual";
@@ -61,6 +51,20 @@ function getVisualSourceLabel(story: FinalStory) {
   } catch {
     return story.sourceName;
   }
+}
+
+function clampVisualText(value: string | undefined, maxLength: number) {
+  const fallback = "This story is awaiting approved English editorial output.";
+  const normalized = (value || fallback).replace(/\s+/g, " ").trim();
+
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  const trimmed = normalized.slice(0, maxLength).trimEnd();
+  const lastSpace = trimmed.lastIndexOf(" ");
+
+  return `${trimmed.slice(0, lastSpace > maxLength * 0.7 ? lastSpace : trimmed.length)}...`;
 }
 
 function formatImageStatus(status: FinalStory["imageStatus"]) {
@@ -329,7 +333,7 @@ export default function Home() {
       cacheBust: true,
       includeQueryParams: true,
       skipFonts: true,
-      pixelRatio: 2,
+      pixelRatio: VISUAL_EXPORT_WIDTH / exportWidth,
       backgroundColor: "#fcf8f1",
       imagePlaceholder: TRANSPARENT_IMAGE_PLACEHOLDER,
       fetchRequestInit: {
@@ -341,8 +345,8 @@ export default function Home() {
       },
       width: exportWidth,
       height: exportHeight,
-      canvasWidth: exportWidth * 2,
-      canvasHeight: exportHeight * 2,
+      canvasWidth: VISUAL_EXPORT_WIDTH,
+      canvasHeight: VISUAL_EXPORT_HEIGHT,
     });
 
     if (!blob) {
@@ -533,8 +537,23 @@ export default function Home() {
 
   const collageFeed =
     selectedStories.length > 0 ? selectedStories : candidateStories.slice(0, 8);
-  const heroStory = collageFeed[0];
-  const collageStories = collageFeed.slice(1);
+  const visibleCollageStories = collageFeed.slice(0, 8);
+  const heroStory = visibleCollageStories[0];
+  const collageStories = visibleCollageStories.slice(1);
+  const hiddenCollageCount = Math.max(collageFeed.length - visibleCollageStories.length, 0);
+  const collageCount = visibleCollageStories.length;
+  const collageHeroClass =
+    collageCount === 1
+      ? "grid-rows-[1fr_0fr]"
+      : collageCount <= 4
+        ? "grid-rows-[0.58fr_0.42fr]"
+        : "grid-rows-[0.48fr_0.52fr]";
+  const collageGridClass =
+    collageCount <= 4
+      ? "grid-cols-1 sm:grid-cols-3"
+      : collageCount <= 7
+        ? "grid-cols-2 sm:grid-cols-3"
+        : "grid-cols-2 sm:grid-cols-4";
 
   if (!isUnlocked) {
     return (
@@ -765,33 +784,36 @@ export default function Home() {
 
           {collageFeed.length === 0 ? (
             <div className="rounded-[32px] border border-dashed border-border bg-panel p-8 text-sm text-muted">
-              Select stories to generate the collage and square Instagram outputs.
+              Select stories to generate the collage and portrait Instagram outputs.
             </div>
           ) : (
             <div className="space-y-6">
-              <div ref={collageRef}>
-                <article className="overflow-hidden rounded-[34px] border border-border bg-[#5b1816] shadow-[0_18px_44px_rgba(72,50,33,0.18)]">
-                  <div className="border-b border-black/15 px-6 py-4">
+              <div
+                ref={collageRef}
+                className="aspect-[4/5] w-[min(100%,540px)] overflow-hidden rounded-[30px] border border-border bg-[#5b1816] shadow-[0_18px_44px_rgba(72,50,33,0.18)]"
+              >
+                <article className="flex h-full flex-col overflow-hidden">
+                  <div className="border-b border-black/15 px-5 py-4">
                     <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
                         <img
                           src="/march19-platform-logo.png"
                           alt="March 19 Platform logo"
-                          className="h-16 w-16 rounded-full bg-white p-1 shadow-sm"
+                          className="h-12 w-12 rounded-full bg-white p-1 shadow-sm"
                         />
                         <div>
-                          <p className="text-lg font-semibold tracking-tight text-white">
+                          <p className="text-base font-semibold tracking-tight text-white">
                             March 19 Platform
                           </p>
-                          <p className="text-sm text-white/80">Selected story collage</p>
+                          <p className="text-xs text-white/80">Selected story collage</p>
                         </div>
                       </div>
-                      <StoryBadge tone="muted">{collageFeed.length} stories</StoryBadge>
+                      <StoryBadge tone="muted">{collageFeed.length} selected</StoryBadge>
                     </div>
                   </div>
 
-                  <div className="aspect-square overflow-hidden">
-                    <div className="grid h-full grid-rows-[1.15fr_0.85fr]">
+                  <div className="min-h-0 flex-1 overflow-hidden">
+                    <div className={`grid h-full ${collageHeroClass}`}>
                       <section className="relative overflow-hidden border-b border-black/20">
                         <SafeStoryImage
                           src={heroStory?.imageUrl || ""}
@@ -799,12 +821,12 @@ export default function Home() {
                           className="absolute inset-0 h-full w-full object-contain bg-[#2f1412]"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,0.96)] via-[rgba(0,0,0,0.42)] to-transparent" />
-                        <div className="absolute inset-x-0 bottom-0 space-y-4 p-8 text-white sm:p-10">
-                          <div className="flex items-center gap-3">
+                        <div className="absolute inset-x-0 bottom-0 space-y-3 p-6 text-white">
+                          <div className="flex items-center gap-2">
                             <img
                               src="/march19-platform-logo.png"
                               alt="March 19 Platform logo"
-                              className="h-12 w-12 rounded-full border border-white/30 bg-white p-1"
+                              className="h-10 w-10 rounded-full border border-white/30 bg-white p-1"
                             />
                             {heroStory ? (
                               <span className="inline-flex items-center rounded-full border border-white/25 bg-black/35 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/85">
@@ -812,30 +834,27 @@ export default function Home() {
                               </span>
                             ) : null}
                           </div>
-                          <h3 className="max-w-3xl text-4xl font-semibold leading-[1.02] tracking-tight sm:text-5xl">
+                          <h3 className="line-clamp-3 text-3xl font-semibold leading-[1.04] tracking-tight">
                             {heroStory?.editorialTitleEN || "Needs Review"}
                           </h3>
-                          <p className="max-w-2xl text-sm leading-6 text-white/88 sm:text-base">
-                            {heroStory?.editorialSummaryEN ||
-                              "This story is awaiting approved English editorial output."}
-                          </p>
-                          <p className="max-w-2xl text-sm leading-6 text-white/72">
-                            {heroStory?.editorialContextEN ||
-                              "This item is being held in the internal review queue."}
-                          </p>
+                          {collageCount <= 4 ? (
+                            <p className="line-clamp-3 text-sm leading-6 text-white/88">
+                              {clampVisualText(heroStory?.editorialSummaryEN, 220)}
+                            </p>
+                          ) : null}
                         </div>
                       </section>
 
-                      <section className="overflow-hidden bg-[#f7efe4] p-5 sm:p-6">
+                      <section className="overflow-hidden bg-[#f7efe4] p-4">
                         {collageStories.length > 0 ? (
-                          <div className="grid h-full auto-rows-fr gap-3 md:grid-cols-2 xl:grid-cols-3">
+                          <div className={`grid h-full gap-3 ${collageGridClass}`}>
                             {collageStories.map((story) => (
                               <article
                                 key={story.id}
-                                className="overflow-hidden rounded-[22px] border border-[#d8c9b6] bg-[#fff9f1]"
+                                className="min-h-0 overflow-hidden rounded-[18px] border border-[#d8c9b6] bg-[#fff9f1]"
                               >
                                 <div className="flex h-full flex-col">
-                                  <div className="h-32 border-b border-[#d8c9b6] bg-[#efe3d2]">
+                                  <div className="min-h-0 flex-[0_0_52%] border-b border-[#d8c9b6] bg-[#efe3d2]">
                                     <div className="relative h-full">
                                       <SafeStoryImage
                                         src={story.imageUrl}
@@ -847,16 +866,17 @@ export default function Home() {
                                       </span>
                                     </div>
                                   </div>
-                                  <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
-                                    <h4 className="text-sm font-semibold leading-5 text-foreground">
+                                  <div className="flex min-h-0 flex-1 flex-col gap-1.5 p-3">
+                                    <h4 className="line-clamp-3 text-sm font-semibold leading-5 text-foreground">
                                       {story.editorialTitleEN || "Needs Review"}
                                     </h4>
-                                    <p className="line-clamp-3 text-xs leading-5 text-muted">
-                                      {story.editorialSummaryEN ||
-                                        "This story is awaiting approved English editorial output."}
-                                    </p>
+                                    {collageCount <= 4 ? (
+                                      <p className="line-clamp-2 text-xs leading-5 text-muted">
+                                        {clampVisualText(story.editorialSummaryEN, 180)}
+                                      </p>
+                                    ) : null}
                                     <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-                                      <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+                                      <span className="line-clamp-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted">
                                         {story.sourceName}
                                       </span>
                                     </div>
@@ -864,11 +884,14 @@ export default function Home() {
                                 </div>
                               </article>
                             ))}
+                            {hiddenCollageCount > 0 ? (
+                              <div className="flex items-center justify-center rounded-[18px] border border-dashed border-[#d8c9b6] bg-[#fff9f1] p-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+                                +{hiddenCollageCount} more selected
+                              </div>
+                            ) : null}
                           </div>
                         ) : (
-                          <div className="rounded-[24px] border border-[#d8c9b6] bg-[#fff9f1] p-5 text-sm text-muted">
-                            When only one story is selected, the collage stays as a single-feature cover.
-                          </div>
+                          <div />
                         )}
                       </section>
                     </div>
@@ -876,15 +899,16 @@ export default function Home() {
                 </article>
               </div>
 
-              <div className="grid gap-5 lg:grid-cols-2">
+              <div className="grid items-start gap-5 lg:grid-cols-2">
                 {collageFeed.map((story) => (
                   <div key={story.id} className="space-y-3">
                     <div
                       ref={(node) => {
                         storyPreviewRefs.current[story.id] = node;
                       }}
+                      className="aspect-[4/5] w-[min(100%,420px)] overflow-hidden rounded-[28px] border border-border bg-panel-strong shadow-[0_10px_30px_rgba(72,50,33,0.08)]"
                     >
-                      <article className="overflow-hidden rounded-[28px] border border-border bg-panel-strong shadow-[0_10px_30px_rgba(72,50,33,0.08)]">
+                      <article className="flex h-full flex-col overflow-hidden">
                         <div className="border-b border-border bg-[#f7efe4] px-5 py-4">
                           <div className="flex items-center gap-3">
                             <img
@@ -899,9 +923,9 @@ export default function Home() {
                             </div>
                           </div>
                         </div>
-                        <div className="aspect-square p-5">
+                        <div className="min-h-0 flex-1 p-5">
                           <div className="flex h-full flex-col gap-4">
-                            <div className="min-h-0 flex-[0_0_54%] overflow-hidden rounded-[22px] border border-border bg-[#efe3d2]">
+                            <div className="min-h-0 flex-[0_0_46%] overflow-hidden rounded-[22px] border border-border bg-[#efe3d2]">
                               <div className="relative h-full">
                                 <SafeStoryImage
                                   src={story.imageUrl}
@@ -914,16 +938,12 @@ export default function Home() {
                               </div>
                             </div>
                             <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
-                              <h4 className="text-2xl font-semibold tracking-tight text-foreground">
+                              <h4 className="line-clamp-4 text-2xl font-semibold leading-tight tracking-tight text-foreground">
                                 {story.editorialTitleEN || "Needs Review"}
                               </h4>
-                              <p className="line-clamp-5 text-base leading-7 text-foreground/85">
-                                {story.editorialSummaryEN ||
-                                  "This story is awaiting approved English editorial output."}
+                              <p className="line-clamp-[12] text-[15px] leading-6 text-foreground/85">
+                                {clampVisualText(story.editorialSummaryEN, 620)}
                               </p>
-                              <div className="pt-1 text-xs uppercase tracking-[0.18em] text-muted">
-                                {formatVisualDate(story.publishedAt)}
-                              </div>
                             </div>
                           </div>
                         </div>
