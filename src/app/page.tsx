@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 
 import { SafeStoryImage } from "@/components/SafeStoryImage";
-import { normalizeSourceName } from "@/lib/articles/source";
 import type { FinalStory } from "@/lib/articles/types";
 
 type AsyncStatus = "idle" | "loading" | "success" | "error";
@@ -12,7 +11,6 @@ const TRANSPARENT_IMAGE_PLACEHOLDER =
   "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
 const VISUAL_EXPORT_WIDTH = 1080;
 const VISUAL_EXPORT_HEIGHT = 1350;
-const VISUAL_SUMMARY_LENGTH = 104;
 
 function addOrUpdateStoryById(stories: FinalStory[], story: FinalStory) {
   const existingIndex = stories.findIndex((item) => item.id === story.id);
@@ -35,39 +33,6 @@ function formatPublishedAt(value?: string) {
   }).format(new Date(value));
 }
 
-function getVisualSourceLabel(story: FinalStory) {
-  if (story.imageStatus === "fallback") {
-    return "Fallback Visual";
-  }
-
-  try {
-    const imageUrl = new URL(story.imageUrl, story.sourceUrl);
-    const storyUrl = new URL(story.sourceUrl);
-    const imageHost = imageUrl.hostname.replace(/^www\./, "");
-    const storyHost = storyUrl.hostname.replace(/^www\./, "");
-
-    return imageHost && imageHost !== storyHost
-      ? normalizeSourceName(imageUrl.toString())
-      : story.sourceName;
-  } catch {
-    return story.sourceName;
-  }
-}
-
-function clampVisualText(value: string | undefined, maxLength: number) {
-  const fallback = "This story is awaiting approved English editorial output.";
-  const normalized = (value || fallback).replace(/\s+/g, " ").trim();
-
-  if (normalized.length <= maxLength) {
-    return normalized;
-  }
-
-  const trimmed = normalized.slice(0, maxLength).trimEnd();
-  const lastSpace = trimmed.lastIndexOf(" ");
-
-  return `${trimmed.slice(0, lastSpace > maxLength * 0.7 ? lastSpace : trimmed.length)}...`;
-}
-
 function getVisualTitle(story: FinalStory | undefined) {
   return story?.visualHeadlineEN || story?.editorialTitleEN || "Needs Review";
 }
@@ -76,7 +41,9 @@ function getVisualTitleClass(value: string, size: "hero" | "single" | "small") {
   const length = value.length;
 
   if (size === "hero") {
-    return length > 92
+    return length > 130
+      ? "text-lg leading-[1.06]"
+      : length > 92
       ? "text-[21px] leading-[1.08]"
       : length > 62
         ? "text-2xl leading-[1.07]"
@@ -84,18 +51,40 @@ function getVisualTitleClass(value: string, size: "hero" | "single" | "small") {
   }
 
   if (size === "single") {
-    return length > 105
-      ? "text-base leading-snug"
-      : length > 72
-        ? "text-lg leading-snug"
-        : "text-2xl leading-tight";
+    return length > 160
+      ? "text-xs leading-[1.08]"
+      : length > 120
+      ? "text-[15px] leading-[1.12]"
+      : length > 88
+        ? "text-base leading-[1.14]"
+        : length > 58
+          ? "text-xl leading-[1.12]"
+          : "text-2xl leading-tight";
   }
 
-  return length > 84
-    ? "text-[10px] leading-[0.85rem]"
-    : length > 56
-      ? "text-[11px] leading-4"
-      : "text-sm leading-5";
+  return length > 130
+    ? "text-[8px] leading-[0.68rem]"
+    : length > 88
+    ? "text-[10px] leading-[0.82rem]"
+    : length > 62
+      ? "text-[11px] leading-[0.9rem]"
+      : length > 38
+        ? "text-xs leading-4"
+        : "text-sm leading-5";
+}
+
+function getVisualSummaryClass(value: string | undefined) {
+  const length = (value || "").replace(/\s+/g, " ").trim().length;
+
+  return length > 420
+    ? length > 700
+      ? "text-[8px] leading-[0.9rem]"
+      : "text-[10px] leading-[1.05rem]"
+    : length > 280
+      ? "text-[11px] leading-[1.15rem]"
+      : length > 180
+        ? "text-xs leading-5"
+        : "text-[15px] leading-6";
 }
 
 function formatImageStatus(status: FinalStory["imageStatus"]) {
@@ -833,20 +822,10 @@ export default function Home() {
                               alt="March 19 Platform logo"
                               className="h-10 w-10 rounded-full border border-white/30 bg-white p-1"
                             />
-                            {heroStory ? (
-                              <span className="inline-flex items-center rounded-full border border-white/25 bg-black/35 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/85">
-                                {getVisualSourceLabel(heroStory)}
-                              </span>
-                            ) : null}
                           </div>
                           <h3 className={`line-clamp-3 font-semibold tracking-tight ${getVisualTitleClass(heroTitle, "hero")}`}>
                             {heroTitle}
                           </h3>
-                          {collageCount <= 4 ? (
-                            <p className="line-clamp-3 text-sm leading-6 text-white/88">
-                              {clampVisualText(heroStory?.editorialSummaryEN, VISUAL_SUMMARY_LENGTH)}
-                            </p>
-                          ) : null}
                         </div>
                       </section>
 
@@ -862,31 +841,16 @@ export default function Home() {
                                   const title = getVisualTitle(story);
 
                                   return (
-                                    <div className="flex h-full flex-col">
-                                      <div className="min-h-0 flex-[0_0_38%] border-b border-[#d8c9b6] bg-[#efe3d2]">
-                                        <div className="relative h-full">
-                                          <SafeStoryImage
-                                            src={story.imageUrl}
-                                            alt={title || "Editorial story image"}
-                                            className="h-full w-full object-contain"
-                                          />
-                                          <span className="absolute bottom-2 left-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
-                                            {getVisualSourceLabel(story)}
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="flex min-h-0 flex-1 flex-col gap-1 p-2.5">
-                                        <h4 className={`line-clamp-2 font-semibold text-foreground ${getVisualTitleClass(title, "small")}`}>
+                                    <div className="relative h-full bg-[#efe3d2]">
+                                      <SafeStoryImage
+                                        src={story.imageUrl}
+                                        alt={title || "Editorial story image"}
+                                        className="h-full w-full object-cover"
+                                      />
+                                      <div className="absolute inset-x-0 bottom-0 bg-black/45 px-2.5 py-2 text-white backdrop-blur-sm">
+                                        <h4 className={`line-clamp-3 font-semibold ${getVisualTitleClass(title, "small")}`}>
                                           {title}
                                         </h4>
-                                        <p className="line-clamp-2 text-[10px] leading-[0.9rem] text-muted">
-                                          {clampVisualText(story.editorialSummaryEN, VISUAL_SUMMARY_LENGTH)}
-                                        </p>
-                                        <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-                                          <span className="line-clamp-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted">
-                                            {story.sourceName}
-                                          </span>
-                                        </div>
                                       </div>
                                     </div>
                                   );
@@ -940,18 +904,20 @@ export default function Home() {
                                   alt={title || "Editorial story image"}
                                   className="h-full w-full object-contain"
                                 />
-                                <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
-                                  {getVisualSourceLabel(story)}
-                                </span>
                               </div>
                             </div>
-                            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
-                              <h4 className={`line-clamp-3 font-semibold tracking-tight text-foreground ${getVisualTitleClass(title, "single")}`}>
-                                {title}
-                              </h4>
-                              <p className="line-clamp-4 text-[15px] leading-6 text-foreground/85">
-                                {clampVisualText(story.editorialSummaryEN, VISUAL_SUMMARY_LENGTH)}
-                              </p>
+                            <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,0.45fr)_minmax(0,0.55fr)] gap-3 overflow-hidden">
+                              <div className="min-h-0 overflow-hidden">
+                                <h4 className={`font-semibold tracking-tight text-foreground ${getVisualTitleClass(title, "single")}`}>
+                                  {title}
+                                </h4>
+                              </div>
+                              <div className="min-h-0 overflow-hidden">
+                                <p className={`text-foreground/85 ${getVisualSummaryClass(story.editorialSummaryEN)}`}>
+                                  {story.editorialSummaryEN ||
+                                    "This story is awaiting approved English editorial output."}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>

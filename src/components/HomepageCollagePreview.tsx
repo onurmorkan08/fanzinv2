@@ -1,42 +1,6 @@
 import type { FinalStory } from "@/lib/articles/types";
-import { normalizeSourceName } from "@/lib/articles/source";
 
 import { SafeStoryImage } from "./SafeStoryImage";
-
-const VISUAL_SUMMARY_LENGTH = 104;
-
-function getVisualSourceLabel(story: FinalStory) {
-  if (story.imageStatus === "fallback") {
-    return "Fallback Visual";
-  }
-
-  try {
-    const imageUrl = new URL(story.imageUrl, story.sourceUrl);
-    const storyUrl = new URL(story.sourceUrl);
-    const imageHost = imageUrl.hostname.replace(/^www\./, "");
-    const storyHost = storyUrl.hostname.replace(/^www\./, "");
-
-    return imageHost && imageHost !== storyHost
-      ? normalizeSourceName(imageUrl.toString())
-      : story.sourceName;
-  } catch {
-    return story.sourceName;
-  }
-}
-
-function clampVisualText(value: string | undefined, maxLength: number) {
-  const fallback = "This story is awaiting approved English editorial output.";
-  const normalized = (value || fallback).replace(/\s+/g, " ").trim();
-
-  if (normalized.length <= maxLength) {
-    return normalized;
-  }
-
-  const trimmed = normalized.slice(0, maxLength).trimEnd();
-  const lastSpace = trimmed.lastIndexOf(" ");
-
-  return `${trimmed.slice(0, lastSpace > maxLength * 0.7 ? lastSpace : trimmed.length)}...`;
-}
 
 function getVisualTitle(story: FinalStory | undefined) {
   return story?.visualHeadlineEN || story?.editorialTitleEN || "Needs Review";
@@ -46,18 +10,24 @@ function getVisualTitleClass(value: string, size: "hero" | "small") {
   const length = value.length;
 
   if (size === "hero") {
-    return length > 92
+    return length > 130
+      ? "text-lg leading-[1.06]"
+      : length > 92
       ? "text-[21px] leading-[1.08]"
       : length > 62
         ? "text-2xl leading-[1.07]"
         : "text-3xl leading-tight";
   }
 
-  return length > 84
-    ? "text-[10px] leading-[0.85rem]"
-    : length > 56
-      ? "text-[11px] leading-4"
-      : "text-sm leading-5";
+  return length > 130
+    ? "text-[8px] leading-[0.68rem]"
+    : length > 88
+    ? "text-[10px] leading-[0.82rem]"
+    : length > 62
+      ? "text-[11px] leading-[0.9rem]"
+      : length > 38
+        ? "text-xs leading-4"
+        : "text-sm leading-5";
 }
 
 function SupportingStoryBlock({ story }: { story: FinalStory }) {
@@ -65,27 +35,16 @@ function SupportingStoryBlock({ story }: { story: FinalStory }) {
 
   return (
     <article className="min-h-0 overflow-hidden rounded-[18px] border border-border bg-panel">
-      <div className="flex h-full flex-col">
-        <div className="min-h-0 flex-[0_0_38%]">
-          <div className="relative h-full">
-            <SafeStoryImage
-              src={story.imageUrl}
-              alt={title || "Editorial story image"}
-              className="h-full w-full object-contain bg-[#efe3d2]"
-            />
-            <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/55 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-white">
-              {getVisualSourceLabel(story)}
-            </span>
-          </div>
-        </div>
-        <div className="flex min-h-0 flex-1 flex-col gap-1 p-2.5">
-          <p className={`line-clamp-2 font-semibold text-foreground ${getVisualTitleClass(title, "small")}`}>
+      <div className="relative h-full bg-[#efe3d2]">
+        <SafeStoryImage
+          src={story.imageUrl}
+          alt={title || "Editorial story image"}
+          className="h-full w-full object-cover"
+        />
+        <div className="absolute inset-x-0 bottom-0 bg-black/45 px-2.5 py-2 text-white backdrop-blur-sm">
+          <p className={`line-clamp-3 font-semibold ${getVisualTitleClass(title, "small")}`}>
             {title}
           </p>
-          <p className="line-clamp-2 text-[10px] leading-[0.9rem] text-muted">
-            {clampVisualText(story.editorialSummaryEN, VISUAL_SUMMARY_LENGTH)}
-          </p>
-          <p className="line-clamp-1 text-xs text-muted">{story.sourceName}</p>
         </div>
       </div>
     </article>
@@ -131,18 +90,10 @@ export function HomepageCollagePreview({
             alt={hero.visualHeadlineEN || hero.editorialTitleEN || "Editorial story image"}
             className="absolute inset-0 h-full w-full object-contain bg-[#2f1412]"
           />
-          <span className="absolute left-6 top-6 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
-            {getVisualSourceLabel(hero)}
-          </span>
           <div className="absolute inset-x-0 bottom-0 space-y-3 bg-gradient-to-t from-[rgba(36,31,26,0.88)] via-[rgba(36,31,26,0.55)] to-transparent p-8 text-white">
             <h2 className={`line-clamp-3 font-semibold tracking-tight ${getVisualTitleClass(heroTitle, "hero")}`}>
               {heroTitle}
             </h2>
-            {visibleStories.length <= 4 ? (
-              <p className="line-clamp-3 text-sm leading-6 text-white/88">
-                {clampVisualText(hero.editorialSummaryEN, VISUAL_SUMMARY_LENGTH)}
-              </p>
-            ) : null}
           </div>
         </section>
 
