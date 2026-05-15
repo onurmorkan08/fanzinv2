@@ -1,6 +1,6 @@
 import type { EditorialFields, RawArticle } from "./types";
 
-const MINIMUM_EDITORIAL_BODY_LENGTH = 140;
+const MINIMUM_EDITORIAL_BODY_LENGTH = 120;
 
 const failedEditorialFields: EditorialFields = {
   editorialTitleEN: "",

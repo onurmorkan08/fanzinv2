@@ -67,6 +67,36 @@ function clampVisualText(value: string | undefined, maxLength: number) {
   return `${trimmed.slice(0, lastSpace > maxLength * 0.7 ? lastSpace : trimmed.length)}...`;
 }
 
+function getVisualTitle(story: FinalStory | undefined) {
+  return story?.visualHeadlineEN || story?.editorialTitleEN || "Needs Review";
+}
+
+function getVisualTitleClass(value: string, size: "hero" | "single" | "small") {
+  const length = value.length;
+
+  if (size === "hero") {
+    return length > 92
+      ? "text-[23px] leading-[1.08]"
+      : length > 62
+        ? "text-[26px] leading-[1.07]"
+        : "text-3xl leading-[1.04]";
+  }
+
+  if (size === "single") {
+    return length > 105
+      ? "text-lg leading-snug"
+      : length > 72
+        ? "text-xl leading-snug"
+        : "text-2xl leading-tight";
+  }
+
+  return length > 84
+    ? "text-[11px] leading-4"
+    : length > 56
+      ? "text-xs leading-[1.1rem]"
+      : "text-sm leading-5";
+}
+
 function formatImageStatus(status: FinalStory["imageStatus"]) {
   if (status === "found") {
     return "Bulundu";
@@ -163,19 +193,6 @@ function StoryEditor({
 
       <label className="space-y-1">
         <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
-          English Headline
-        </span>
-        <input
-          value={story.visualHeadlineEN}
-          onChange={(event) =>
-            onFieldChange(story.id, { visualHeadlineEN: event.target.value })
-          }
-          className="w-full rounded-2xl border border-border bg-panel px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
-        />
-      </label>
-
-      <label className="space-y-1">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
           English Summary
         </span>
         <textarea
@@ -184,20 +201,6 @@ function StoryEditor({
             onFieldChange(story.id, { editorialSummaryEN: event.target.value })
           }
           rows={3}
-          className="w-full rounded-2xl border border-border bg-panel px-3 py-2 text-sm leading-6 text-foreground outline-none focus:border-accent"
-        />
-      </label>
-
-      <label className="space-y-1">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
-          English Story Text
-        </span>
-        <textarea
-          value={story.editorialContextEN}
-          onChange={(event) =>
-            onFieldChange(story.id, { editorialContextEN: event.target.value })
-          }
-          rows={4}
           className="w-full rounded-2xl border border-border bg-panel px-3 py-2 text-sm leading-6 text-foreground outline-none focus:border-accent"
         />
       </label>
@@ -539,8 +542,8 @@ export default function Home() {
     selectedStories.length > 0 ? selectedStories : candidateStories.slice(0, 8);
   const visibleCollageStories = collageFeed.slice(0, 8);
   const heroStory = visibleCollageStories[0];
+  const heroTitle = getVisualTitle(heroStory);
   const collageStories = visibleCollageStories.slice(1);
-  const hiddenCollageCount = Math.max(collageFeed.length - visibleCollageStories.length, 0);
   const collageCount = visibleCollageStories.length;
   const collageHeroClass =
     collageCount === 1
@@ -730,7 +733,8 @@ export default function Home() {
               </div>
               <StoryBadge tone="muted">{selectedStories.length} selected</StoryBadge>
             </div>
-            <div className="flex flex-col gap-4">
+            <div className="max-h-[2200px] overflow-y-auto pr-2">
+              <div className="flex flex-col gap-4">
               {selectedStories.length > 0 ? (
                 selectedStories.map((story) => (
                   <StoryRow
@@ -746,6 +750,7 @@ export default function Home() {
                   No stories selected yet. Pick candidate items to stage Instagram outputs.
                 </div>
               )}
+              </div>
             </div>
           </div>
         </section>
@@ -808,7 +813,6 @@ export default function Home() {
                           <p className="text-xs text-white/80">Selected story collage</p>
                         </div>
                       </div>
-                      <StoryBadge tone="muted">{collageFeed.length} selected</StoryBadge>
                     </div>
                   </div>
 
@@ -834,8 +838,8 @@ export default function Home() {
                               </span>
                             ) : null}
                           </div>
-                          <h3 className="line-clamp-3 text-3xl font-semibold leading-[1.04] tracking-tight">
-                            {heroStory?.editorialTitleEN || "Needs Review"}
+                          <h3 className={`line-clamp-3 font-semibold tracking-tight ${getVisualTitleClass(heroTitle, "hero")}`}>
+                            {heroTitle}
                           </h3>
                           {collageCount <= 4 ? (
                             <p className="line-clamp-3 text-sm leading-6 text-white/88">
@@ -853,12 +857,16 @@ export default function Home() {
                                 key={story.id}
                                 className="min-h-0 overflow-hidden rounded-[18px] border border-[#d8c9b6] bg-[#fff9f1]"
                               >
+                                {(() => {
+                                  const title = getVisualTitle(story);
+
+                                  return (
                                 <div className="flex h-full flex-col">
-                                  <div className="min-h-0 flex-[0_0_52%] border-b border-[#d8c9b6] bg-[#efe3d2]">
+                                  <div className="min-h-0 flex-[0_0_42%] border-b border-[#d8c9b6] bg-[#efe3d2]">
                                     <div className="relative h-full">
                                       <SafeStoryImage
                                         src={story.imageUrl}
-                                        alt={story.editorialTitleEN || "Editorial story image"}
+                                        alt={title || "Editorial story image"}
                                         className="h-full w-full object-contain"
                                       />
                                       <span className="absolute bottom-2 left-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
@@ -866,13 +874,13 @@ export default function Home() {
                                       </span>
                                     </div>
                                   </div>
-                                  <div className="flex min-h-0 flex-1 flex-col gap-1.5 p-3">
-                                    <h4 className="line-clamp-3 text-sm font-semibold leading-5 text-foreground">
-                                      {story.editorialTitleEN || "Needs Review"}
+                                  <div className="flex min-h-0 flex-1 flex-col gap-1 p-2.5">
+                                    <h4 className={`line-clamp-3 font-semibold text-foreground ${getVisualTitleClass(title, "small")}`}>
+                                      {title}
                                     </h4>
                                     {collageCount <= 4 ? (
-                                      <p className="line-clamp-2 text-xs leading-5 text-muted">
-                                        {clampVisualText(story.editorialSummaryEN, 180)}
+                                      <p className="line-clamp-3 text-xs leading-[1.05rem] text-muted">
+                                        {clampVisualText(story.editorialSummaryEN, 220)}
                                       </p>
                                     ) : null}
                                     <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
@@ -882,13 +890,10 @@ export default function Home() {
                                     </div>
                                   </div>
                                 </div>
+                                  );
+                                })()}
                               </article>
                             ))}
-                            {hiddenCollageCount > 0 ? (
-                              <div className="flex items-center justify-center rounded-[18px] border border-dashed border-[#d8c9b6] bg-[#fff9f1] p-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-                                +{hiddenCollageCount} more selected
-                              </div>
-                            ) : null}
                           </div>
                         ) : (
                           <div />
@@ -902,6 +907,10 @@ export default function Home() {
               <div className="grid items-start gap-5 lg:grid-cols-2">
                 {collageFeed.map((story) => (
                   <div key={story.id} className="space-y-3">
+                    {(() => {
+                      const title = getVisualTitle(story);
+
+                      return (
                     <div
                       ref={(node) => {
                         storyPreviewRefs.current[story.id] = node;
@@ -929,7 +938,7 @@ export default function Home() {
                               <div className="relative h-full">
                                 <SafeStoryImage
                                   src={story.imageUrl}
-                                  alt={story.editorialTitleEN || "Editorial story image"}
+                                  alt={title || "Editorial story image"}
                                   className="h-full w-full object-contain"
                                 />
                                 <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
@@ -938,8 +947,8 @@ export default function Home() {
                               </div>
                             </div>
                             <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
-                              <h4 className="line-clamp-4 text-2xl font-semibold leading-tight tracking-tight text-foreground">
-                                {story.editorialTitleEN || "Needs Review"}
+                              <h4 className={`line-clamp-4 font-semibold tracking-tight text-foreground ${getVisualTitleClass(title, "single")}`}>
+                                {title}
                               </h4>
                               <p className="line-clamp-[12] text-[15px] leading-6 text-foreground/85">
                                 {clampVisualText(story.editorialSummaryEN, 620)}
@@ -949,6 +958,8 @@ export default function Home() {
                         </div>
                       </article>
                     </div>
+                      );
+                    })()}
 
                     <button
                       type="button"

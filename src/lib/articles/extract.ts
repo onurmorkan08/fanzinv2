@@ -183,12 +183,17 @@ function isJunkParagraph(paragraph: string) {
     /^ilgili haberler/,
     /^etiketler/,
     /^kaynak$/,
+    /^source$/,
     /^video$/,
     /^galeri$/,
     /^son dakika/,
     /^abone ol/,
+    /^subscribe/,
     /^paylaş/,
     /^share$/,
+    /^share this/,
+    /^share on/,
+    /^follow us/,
     /^yorumlar/,
     /^çerez/,
     /^cookie/,
@@ -197,11 +202,19 @@ function isJunkParagraph(paragraph: string) {
     /^kullanım şartları/,
     /^terms/,
     /^copyright/,
+    /^all rights reserved/,
+    /^related articles/,
+    /^you may also like/,
     /^tüm hakları saklıdır/,
     /facebook'ta paylaş/,
     /twitter'da paylaş/,
     /whatsapp'ta paylaş/,
     /javascript/,
+    /share on facebook/,
+    /share on twitter/,
+    /share on whatsapp/,
+    /sign up for/,
+    /newsletter/,
   ].some((pattern) => pattern.test(normalized));
 }
 
@@ -258,12 +271,22 @@ function extractBodyText(html: string, jsonLdBody: string) {
     () =>
       extractParagraphsByPattern(
         html,
-        /<(?:article|main|section|div)\b[^>]+class=["'][^"']*article[^"']*["'][^>]*>([\s\S]*?)<\/(?:article|main|section|div)>/gi,
+        /<div\b[^>]+class=["'][^"']*entry[^"']*["'][^>]*>([\s\S]*?)<\/div>/gi,
       ),
     () =>
       extractParagraphsByPattern(
         html,
-        /<(?:article|main|section|div)\b[^>]+class=["'][^"']*content[^"']*["'][^>]*>([\s\S]*?)<\/(?:article|main|section|div)>/gi,
+        /<div\b[^>]+class=["'][^"']*post[^"']*["'][^>]*>([\s\S]*?)<\/div>/gi,
+      ),
+    () =>
+      extractParagraphsByPattern(
+        html,
+        /<div\b[^>]+class=["'][^"']*content[^"']*["'][^>]*>([\s\S]*?)<\/div>/gi,
+      ),
+    () =>
+      extractParagraphsByPattern(
+        html,
+        /<div\b[^>]+class=["'][^"']*article[^"']*["'][^>]*>([\s\S]*?)<\/div>/gi,
       ),
     () =>
       extractParagraphsByPattern(
