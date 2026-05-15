@@ -8,22 +8,22 @@ function getVisualTitle(story: FinalStory) {
 
 function getVisualTitleClass(value: string) {
   if (value.length > 160) {
-    return "text-xs leading-[1.08]";
+    return "text-sm leading-[1.08]";
   }
 
   if (value.length > 120) {
-    return "text-[13px] leading-[1.12]";
+    return "text-base leading-[1.12]";
   }
 
   if (value.length > 88) {
-    return "text-sm leading-[1.14]";
+    return "text-lg leading-[1.14]";
   }
 
   if (value.length > 58) {
-    return "text-[15px] leading-snug";
+    return "text-xl leading-[1.12]";
   }
 
-  return "text-base leading-normal";
+  return "text-2xl leading-tight";
 }
 
 function getVisualSummaryClass(value: string | undefined) {
@@ -31,13 +31,13 @@ function getVisualSummaryClass(value: string | undefined) {
 
   return length > 420
     ? length > 700
-      ? "text-[8px] leading-[0.9rem]"
-      : "text-[10px] leading-[1.05rem]"
+      ? "text-[10px] leading-[1rem]"
+      : "text-xs leading-[1.15rem]"
     : length > 280
-      ? "text-[11px] leading-[1.15rem]"
+      ? "text-[13px] leading-5"
       : length > 180
-        ? "text-xs leading-5"
-        : "text-sm leading-6";
+        ? "text-sm leading-[1.35rem]"
+        : "text-base leading-6";
 }
 
 export function StoryPreviewCard({ story }: { story: FinalStory }) {
@@ -52,7 +52,7 @@ export function StoryPreviewCard({ story }: { story: FinalStory }) {
           className="h-full w-full object-cover"
         />
       </div>
-      <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,0.43fr)_minmax(0,0.57fr)_auto] gap-2.5">
+      <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,0.28fr)_minmax(0,0.72fr)_auto] gap-2.5">
         <div className="min-h-0 overflow-hidden">
           <h3 className={`font-semibold text-foreground ${getVisualTitleClass(title)}`}>
             {title}

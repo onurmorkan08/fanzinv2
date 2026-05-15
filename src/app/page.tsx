@@ -52,11 +52,11 @@ function getVisualTitleClass(value: string, size: "hero" | "single" | "small") {
 
   if (size === "single") {
     return length > 160
-      ? "text-xs leading-[1.08]"
+      ? "text-sm leading-[1.08]"
       : length > 120
-      ? "text-[15px] leading-[1.12]"
+      ? "text-base leading-[1.12]"
       : length > 88
-        ? "text-base leading-[1.14]"
+        ? "text-lg leading-[1.14]"
         : length > 58
           ? "text-xl leading-[1.12]"
           : "text-2xl leading-tight";
@@ -78,13 +78,13 @@ function getVisualSummaryClass(value: string | undefined) {
 
   return length > 420
     ? length > 700
-      ? "text-[8px] leading-[0.9rem]"
-      : "text-[10px] leading-[1.05rem]"
+      ? "text-[10px] leading-[1rem]"
+      : "text-xs leading-[1.15rem]"
     : length > 280
-      ? "text-[11px] leading-[1.15rem]"
+      ? "text-[13px] leading-5"
       : length > 180
-        ? "text-xs leading-5"
-        : "text-[15px] leading-6";
+        ? "text-sm leading-[1.35rem]"
+        : "text-base leading-6";
 }
 
 function formatImageStatus(status: FinalStory["imageStatus"]) {
@@ -906,7 +906,7 @@ export default function Home() {
                                 />
                               </div>
                             </div>
-                            <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,0.45fr)_minmax(0,0.55fr)] gap-3 overflow-hidden">
+                            <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,0.28fr)_minmax(0,0.72fr)] gap-2.5 overflow-hidden">
                               <div className="min-h-0 overflow-hidden">
                                 <h4 className={`font-semibold tracking-tight text-foreground ${getVisualTitleClass(title, "single")}`}>
                                   {title}
