@@ -12,6 +12,7 @@ const TRANSPARENT_IMAGE_PLACEHOLDER =
   "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
 const VISUAL_EXPORT_WIDTH = 1080;
 const VISUAL_EXPORT_HEIGHT = 1350;
+const VISUAL_SUMMARY_LENGTH = 104;
 
 function addOrUpdateStoryById(stories: FinalStory[], story: FinalStory) {
   const existingIndex = stories.findIndex((item) => item.id === story.id);
@@ -76,24 +77,24 @@ function getVisualTitleClass(value: string, size: "hero" | "single" | "small") {
 
   if (size === "hero") {
     return length > 92
-      ? "text-[23px] leading-[1.08]"
+      ? "text-[21px] leading-[1.08]"
       : length > 62
-        ? "text-[26px] leading-[1.07]"
+        ? "text-2xl leading-[1.07]"
         : "text-3xl leading-[1.04]";
   }
 
   if (size === "single") {
     return length > 105
-      ? "text-lg leading-snug"
+      ? "text-base leading-snug"
       : length > 72
-        ? "text-xl leading-snug"
+        ? "text-lg leading-snug"
         : "text-2xl leading-tight";
   }
 
   return length > 84
-    ? "text-[11px] leading-4"
+    ? "text-[10px] leading-[0.85rem]"
     : length > 56
-      ? "text-xs leading-[1.1rem]"
+      ? "text-[11px] leading-4"
       : "text-sm leading-5";
 }
 
@@ -733,23 +734,23 @@ export default function Home() {
               </div>
               <StoryBadge tone="muted">{selectedStories.length} selected</StoryBadge>
             </div>
-            <div className="max-h-[2200px] overflow-y-auto pr-2">
+            <div className="max-h-[2600px] overflow-y-auto pr-2">
               <div className="flex flex-col gap-4">
-              {selectedStories.length > 0 ? (
-                selectedStories.map((story) => (
-                  <StoryRow
-                    key={story.id}
-                    story={story}
-                    actionLabel="Remove"
-                    onAction={removeSelectedStory}
-                    onFieldChange={updateStoryFields}
-                  />
-                ))
-              ) : (
-                <div className="rounded-[28px] border border-dashed border-border bg-panel p-8 text-sm text-muted">
-                  No stories selected yet. Pick candidate items to stage Instagram outputs.
-                </div>
-              )}
+                {selectedStories.length > 0 ? (
+                  selectedStories.map((story) => (
+                    <StoryRow
+                      key={story.id}
+                      story={story}
+                      actionLabel="Remove"
+                      onAction={removeSelectedStory}
+                      onFieldChange={updateStoryFields}
+                    />
+                  ))
+                ) : (
+                  <div className="rounded-[28px] border border-dashed border-border bg-panel p-8 text-sm text-muted">
+                    No stories selected yet. Pick candidate items to stage Instagram outputs.
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -843,7 +844,7 @@ export default function Home() {
                           </h3>
                           {collageCount <= 4 ? (
                             <p className="line-clamp-3 text-sm leading-6 text-white/88">
-                              {clampVisualText(heroStory?.editorialSummaryEN, 220)}
+                              {clampVisualText(heroStory?.editorialSummaryEN, VISUAL_SUMMARY_LENGTH)}
                             </p>
                           ) : null}
                         </div>
@@ -861,35 +862,33 @@ export default function Home() {
                                   const title = getVisualTitle(story);
 
                                   return (
-                                <div className="flex h-full flex-col">
-                                  <div className="min-h-0 flex-[0_0_42%] border-b border-[#d8c9b6] bg-[#efe3d2]">
-                                    <div className="relative h-full">
-                                      <SafeStoryImage
-                                        src={story.imageUrl}
-                                        alt={title || "Editorial story image"}
-                                        className="h-full w-full object-contain"
-                                      />
-                                      <span className="absolute bottom-2 left-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
-                                        {getVisualSourceLabel(story)}
-                                      </span>
+                                    <div className="flex h-full flex-col">
+                                      <div className="min-h-0 flex-[0_0_38%] border-b border-[#d8c9b6] bg-[#efe3d2]">
+                                        <div className="relative h-full">
+                                          <SafeStoryImage
+                                            src={story.imageUrl}
+                                            alt={title || "Editorial story image"}
+                                            className="h-full w-full object-contain"
+                                          />
+                                          <span className="absolute bottom-2 left-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
+                                            {getVisualSourceLabel(story)}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="flex min-h-0 flex-1 flex-col gap-1 p-2.5">
+                                        <h4 className={`line-clamp-2 font-semibold text-foreground ${getVisualTitleClass(title, "small")}`}>
+                                          {title}
+                                        </h4>
+                                        <p className="line-clamp-2 text-[10px] leading-[0.9rem] text-muted">
+                                          {clampVisualText(story.editorialSummaryEN, VISUAL_SUMMARY_LENGTH)}
+                                        </p>
+                                        <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+                                          <span className="line-clamp-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted">
+                                            {story.sourceName}
+                                          </span>
+                                        </div>
+                                      </div>
                                     </div>
-                                  </div>
-                                  <div className="flex min-h-0 flex-1 flex-col gap-1 p-2.5">
-                                    <h4 className={`line-clamp-3 font-semibold text-foreground ${getVisualTitleClass(title, "small")}`}>
-                                      {title}
-                                    </h4>
-                                    {collageCount <= 4 ? (
-                                      <p className="line-clamp-3 text-xs leading-[1.05rem] text-muted">
-                                        {clampVisualText(story.editorialSummaryEN, 220)}
-                                      </p>
-                                    ) : null}
-                                    <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-                                      <span className="line-clamp-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted">
-                                        {story.sourceName}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
                                   );
                                 })()}
                               </article>
@@ -934,7 +933,7 @@ export default function Home() {
                         </div>
                         <div className="min-h-0 flex-1 p-5">
                           <div className="flex h-full flex-col gap-4">
-                            <div className="min-h-0 flex-[0_0_46%] overflow-hidden rounded-[22px] border border-border bg-[#efe3d2]">
+                            <div className="min-h-0 flex-[0_0_42%] overflow-hidden rounded-[22px] border border-border bg-[#efe3d2]">
                               <div className="relative h-full">
                                 <SafeStoryImage
                                   src={story.imageUrl}
@@ -947,11 +946,11 @@ export default function Home() {
                               </div>
                             </div>
                             <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
-                              <h4 className={`line-clamp-4 font-semibold tracking-tight text-foreground ${getVisualTitleClass(title, "single")}`}>
+                              <h4 className={`line-clamp-3 font-semibold tracking-tight text-foreground ${getVisualTitleClass(title, "single")}`}>
                                 {title}
                               </h4>
-                              <p className="line-clamp-[12] text-[15px] leading-6 text-foreground/85">
-                                {clampVisualText(story.editorialSummaryEN, 620)}
+                              <p className="line-clamp-4 text-[15px] leading-6 text-foreground/85">
+                                {clampVisualText(story.editorialSummaryEN, VISUAL_SUMMARY_LENGTH)}
                               </p>
                             </div>
                           </div>

@@ -3,6 +3,8 @@ import { normalizeSourceName } from "@/lib/articles/source";
 
 import { SafeStoryImage } from "./SafeStoryImage";
 
+const VISUAL_SUMMARY_LENGTH = 104;
+
 function getVisualSourceLabel(story: FinalStory) {
   if (story.imageStatus === "fallback") {
     return "Fallback Visual";
@@ -45,26 +47,26 @@ function getVisualTitleClass(value: string, size: "hero" | "small") {
 
   if (size === "hero") {
     return length > 92
-      ? "text-[23px] leading-[1.08]"
+      ? "text-[21px] leading-[1.08]"
       : length > 62
-        ? "text-[26px] leading-[1.07]"
+        ? "text-2xl leading-[1.07]"
         : "text-3xl leading-tight";
   }
 
   return length > 84
-    ? "text-[11px] leading-4"
+    ? "text-[10px] leading-[0.85rem]"
     : length > 56
-      ? "text-xs leading-[1.1rem]"
+      ? "text-[11px] leading-4"
       : "text-sm leading-5";
 }
 
-function SupportingStoryBlock({ story, compact }: { story: FinalStory; compact: boolean }) {
+function SupportingStoryBlock({ story }: { story: FinalStory }) {
   const title = getVisualTitle(story);
 
   return (
     <article className="min-h-0 overflow-hidden rounded-[18px] border border-border bg-panel">
       <div className="flex h-full flex-col">
-        <div className="min-h-0 flex-[0_0_42%]">
+        <div className="min-h-0 flex-[0_0_38%]">
           <div className="relative h-full">
             <SafeStoryImage
               src={story.imageUrl}
@@ -77,14 +79,12 @@ function SupportingStoryBlock({ story, compact }: { story: FinalStory; compact: 
           </div>
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-1 p-2.5">
-          <p className={`line-clamp-3 font-semibold text-foreground ${getVisualTitleClass(title, "small")}`}>
+          <p className={`line-clamp-2 font-semibold text-foreground ${getVisualTitleClass(title, "small")}`}>
             {title}
           </p>
-          {!compact ? (
-            <p className="line-clamp-3 text-xs leading-[1.05rem] text-muted">
-              {clampVisualText(story.editorialSummaryEN, 220)}
-            </p>
-          ) : null}
+          <p className="line-clamp-2 text-[10px] leading-[0.9rem] text-muted">
+            {clampVisualText(story.editorialSummaryEN, VISUAL_SUMMARY_LENGTH)}
+          </p>
           <p className="line-clamp-1 text-xs text-muted">{story.sourceName}</p>
         </div>
       </div>
@@ -140,7 +140,7 @@ export function HomepageCollagePreview({
             </h2>
             {visibleStories.length <= 4 ? (
               <p className="line-clamp-3 text-sm leading-6 text-white/88">
-                {clampVisualText(hero.editorialSummaryEN, 220)}
+                {clampVisualText(hero.editorialSummaryEN, VISUAL_SUMMARY_LENGTH)}
               </p>
             ) : null}
           </div>
@@ -152,7 +152,6 @@ export function HomepageCollagePreview({
               <SupportingStoryBlock
                 key={story.id}
                 story={story}
-                compact={visibleStories.length > 4}
               />
             ))}
           </div>
